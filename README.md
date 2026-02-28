@@ -1,4 +1,4 @@
-# 🎵 XiaoMusic iOS Web Theme
+# 🎵 XiaoMusic Web Theme for IPhone
 
 > 基于 **XiaoMusic** 的一个纯前端 Web 主题  
 > 专为 **iPhone / iOS Safari** 优化  
