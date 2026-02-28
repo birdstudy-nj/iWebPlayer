@@ -274,12 +274,10 @@ index.html
 
 ---
 
-## ❤️ 适用人群
+## ❤️ 致谢
 
-- 使用 XiaoMusic 的用户
-    
-- 希望 iPhone 能正常播放的用户
-    
-- 想要单文件部署的用户
-    
-- 追求原生体验的用户
+iWebPlayer 基于 XiaoMusic 官方项目开发：
+👉 https://github.com/hanxi/xiaomusic
+
+感谢原作者 hanxi 提供优秀的后端服务接口。
+iWebPlayer 仅作为其生态下的一个 Web 主题扩展。
