@@ -29,10 +29,17 @@
 
 ## 📦 部署方式
 
-- 安装方式：只需要把文件iwebplayer.html复制到XiaoMusic中的static文件下
-- 使用方式：XiaoMusic地址:端口/static/iwebplayer.html
-（建议把url添加到桌面）
+### 🔧 安装方式  
+只需将文件 **`iwebplayer.html`** 复制到 XiaoMusic 的 `static` 目录下：
+- Docker 方式（示例命令）：
+```bash
+docker cp /home/路径/iwebplayer.html 容器名称:/app/xiaomusic/static/xplayer/index.html
+```
+### ▶️ 使用方式
+- 在iPhone Safari浏览器访问 http://XiaoMusic地址:端口/static/iwebplayer.html
   
+💡 建议将该 URL 添加到手机或电脑桌面，使用更方便。
+    
 ---
 
 
