@@ -171,7 +171,7 @@
 
 
 <!-- 横向并列图片，带间距、边框、圆角 -->
-<div style="display:flex; gap:20px; flex-wrap:wrap; align-items:flex-start;">
+<div style="display:flex; gap:50px; flex-wrap:wrap; align-items:flex-start;">
   <img src="https://github.com/user-attachments/assets/b9069276-33e6-4ea1-9b74-cb7fe5ae0675"
        alt="效果图1" style="width:260px; border:1px solid #ddd; border-radius:10px;" />
   <img src="https://github.com/user-attachments/assets/2cf49169-0b65-444c-90d5-4ab4dabe4de9"
