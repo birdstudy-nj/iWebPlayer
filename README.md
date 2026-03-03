@@ -38,7 +38,7 @@ docker cp /home/路径/iwebplayer.html 容器名称:/app/xiaomusic/static/xplaye
 ### ▶️ 使用方式
 - 在iPhone Safari浏览器访问 http://XiaoMusic地址:端口/static/iwebplayer.html
   
-💡 建议将该 URL 添加到手机或电脑桌面，使用更方便。
+💡 建议将该 URL 共享到手机桌面，这样更像独立的APP。
     
 ---
 
