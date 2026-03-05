@@ -177,18 +177,19 @@ docker cp /home/路径/iwebplayer.html 容器名称:/app/xiaomusic/static/xplaye
 ## 📷 效果示意
 
 
-<!-- 横向并列图片，带间距、边框、圆角 -->
-<div style="display:flex; gap:50px; flex-wrap:wrap; align-items:flex-start;">
-  <img src="https://github.com/user-attachments/assets/b9069276-33e6-4ea1-9b74-cb7fe5ae0675"
-       alt="效果图1" style="width:260px; border:1px solid #ddd; border-radius:10px;" />
-  <img src="https://github.com/user-attachments/assets/2cf49169-0b65-444c-90d5-4ab4dabe4de9"
-       alt="效果图2" style="width:260px; border:1px solid #ddd; border-radius:10px;" />
-  <img src="https://github.com/user-attachments/assets/5f8582f8-0721-4ab6-9e94-45483d32f0c3"
-       alt="效果图3" style="width:260px; border:1px solid #ddd; border-radius:10px;" />
-</div>
+<!-- 第1行 -->
+<p>
+  <img src="https://github.com/user-attachments/assets/b9069276-33e6-4ea1-9b74-cb7fe5ae0675" alt="效果图1" width="300">
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="https://github.com/user-attachments/assets/b8dbf05f-a704-4582-be39-9c6bfae3c93e" alt="效果图2" width="300">
+</p>
 
-
-
+<!-- 第2行 -->
+<p>
+  <img src="https://github.com/user-attachments/assets/43558287-f4fc-4fa0-a230-2ce02ea93692" alt="效果图3" width="300">
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="https://github.com/user-attachments/assets/08fbcb90-5c21-4bab-a27f-2ecc055f4672" alt="效果图4" width="300">
+</p>
 
 
 
