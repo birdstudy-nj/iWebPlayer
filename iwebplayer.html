@@ -452,7 +452,7 @@
       cmdStatus: '/cmdstatus'
     };
 
-    let APP_VERSION = 'v0.5';
+    let APP_VERSION = 'v0.6';
     let APP_LOGO = document.getElementById('app-logo')?.content || '';
     const defaultCover = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23ec4899' /%3E%3Cstop offset='100%25' stop-color='%238b5cf6' /%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='50' fill='%231f2937' /%3E%3Ccircle cx='50' cy='50' r='40' fill='none' stroke='%23374151' stroke-width='1' /%3E%3Ccircle cx='50' cy='50' r='30' fill='none' stroke='%23374151' stroke-width='1' /%3E%3Ccircle cx='50' cy='50' r='20' fill='url(%23grad)' /%3E%3Ccircle cx='50' cy='50' r='5' fill='%23111827' /%3E%3Cpath d='M50 15 A35 35 0 0 1 85 50' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' opacity='0.3' /%3E%3C/svg%3E";
     const eqHtml = `<div class="playing-eq"><span class="eq-bar"></span><span class="eq-bar"></span><span class="eq-bar"></span></div>`;
@@ -885,88 +885,130 @@
 
     async function playSong(index, autoPlay = true, resumeTime = 0) {
       if (index < 0 || index >= songList.length) return;
-      highlightSongUI(index); const targetSongName = currentSongName;
+      highlightSongUI(index);
+      const targetSongName = currentSongName;
 
       try {
         const res = await fetch(API.info + encodeURIComponent(currentSongName));
         const info = await res.json();
-        let hasLocalCover = info.tags && info.tags.picture; let hasLocalLyrics = info.tags && info.tags.lyrics;
-        let coverUrl = hasLocalCover ? info.tags.picture : defaultCover;
-        fpCover.src = coverUrl; miniCoverImg.src = coverUrl;
-        parseLyrics(hasLocalLyrics ? info.tags.lyrics : null);
-        updateMediaSession(currentSongName, coverUrl !== defaultCover ? coverUrl : null);
 
-        const searchName = currentSongName.replace(/\.[a-zA-Z0-9]+$/, '');
-        const qTerm = encodeURIComponent(searchName);
+        let finalCover = info.tags && info.tags.picture ? info.tags.picture : null;
+        let finalLrc = info.tags && info.tags.lyrics ? info.tags.lyrics : null;
 
-        if (!hasLocalCover || !hasLocalLyrics) {
-          const fetchAndSetCover = async (primaryCoverUrl) => {
-            if (hasLocalCover) return;
-            if (primaryCoverUrl) {
-              fpCover.src = primaryCoverUrl; miniCoverImg.src = primaryCoverUrl;
-              updateMediaSession(currentSongName, primaryCoverUrl); return;
-            }
-            try {
-              const itunesUrl = `https://itunes.apple.com/search?term=${qTerm}&media=music&entity=song&limit=1`;
-              const proxyUrl = `${workingProxyPath}?urlb64=${btoa(itunesUrl)}`;
-              const res = await fetch(proxyUrl);
-              if (res.ok) {
-                const data = await res.json();
-                if (currentSongName === targetSongName && data.results && data.results.length > 0) {
-                  const highResCover = data.results[0].artworkUrl100.replace('100x100bb', '600x600bb');
-                  fpCover.src = highResCover; miniCoverImg.src = highResCover; updateMediaSession(currentSongName, highResCover);
-                }
-              }
-            } catch (e) {}
-          };
+        let currentRenderedCover = null;
+        let currentRenderedLrc = null;
 
-          const fetchAndSetLyrics = async (primaryLrcData) => {
-            if (hasLocalLyrics) return;
-            if (primaryLrcData) {
-              parseLyrics(primaryLrcData);
-              if (currentDid === "" && !audioEl.paused) syncLyrics(audioEl.currentTime);
-              return;
-            }
-            try {
-              const res = await fetch(`https://lrclib.net/api/search?q=${qTerm}`);
-              if (res.ok) {
-                const data = await res.json();
-                if (currentSongName === targetSongName && data && data.length > 0) {
-                  const bestMatch = data[0]; const fetchedLyrics = bestMatch.syncedLyrics || bestMatch.plainLyrics;
-                  if (fetchedLyrics) {
-                    parseLyrics(fetchedLyrics);
-                    if (currentDid === "" && !audioEl.paused) syncLyrics(audioEl.currentTime);
-                  }
-                }
-              }
-            } catch (e) {}
-          };
+        const applyUI = () => {
+          if (targetSongName !== currentSongName) return;
 
-          const fetchFromPrimaryApi = async () => {
-             let title = searchName; let artist = "";
-             if (searchName.includes('-')) { const parts = searchName.split('-'); title = parts[0].trim(); artist = parts[1].trim(); }
-             try {
-               let foundCover = null; let foundLrc = null;
-               if (title && artist) {
-                 const primaryApiUrl = `https://api.lrc.cx/jsonapi?title=${encodeURIComponent(title)}&artist=${encodeURIComponent(artist)}`;
-                 const res = await fetch(`${workingProxyPath}?urlb64=${btoa(primaryApiUrl)}`);
-                 if (res.ok) {
-                   const data = await res.json();
-                   if (Array.isArray(data) && data.length > 0) {
-                     for (const item of data) {
-                       if (item.title?.trim().toLowerCase() === title.trim().toLowerCase() && item.artist?.trim().toLowerCase() === artist.trim().toLowerCase()) {
-                         if (!foundCover && typeof item.cover === 'string' && item.cover.endsWith('.jpg') && await isCoverAcceptable(item.cover, 3000)) foundCover = item.cover;
-                         if (!foundLrc && typeof item.lrc === 'string' && /\[(\d{1,2}):(\d{2})(?:\.\d{1,3})?\]/m.test(item.lrc)) foundLrc = item.lrc;
-                         if (foundCover && foundLrc) break;
-                       }
-                     }
-                   }
+          if (finalCover && finalCover !== currentRenderedCover) {
+            fpCover.src = finalCover;
+            miniCoverImg.src = finalCover;
+            updateMediaSession(currentSongName, finalCover);
+            currentRenderedCover = finalCover;
+          }
+          if (finalLrc && finalLrc !== currentRenderedLrc) {
+            parseLyrics(finalLrc);
+            if (currentDid === "" && !audioEl.paused) syncLyrics(audioEl.currentTime);
+            currentRenderedLrc = finalLrc;
+          }
+        };
+
+        if (finalCover || finalLrc) applyUI();
+
+        if (!finalCover || !finalLrc) {
+
+          // --- 阶段1：ID3标签精准刮削 ---
+          if (info.tags && info.tags.title && info.tags.artist) {
+            const res1 = await fetchFromLrcCx(info.tags.title, info.tags.artist, true);
+            if (!finalCover && res1.cover) finalCover = res1.cover;
+            if (!finalLrc && res1.lrc) finalLrc = res1.lrc;
+            applyUI();
+          }
+
+          // --- 阶段2：智能文件名刮削 ---
+          if (!finalCover || !finalLrc) {
+            const filename = currentSongName.replace(/\.[a-zA-Z0-9]+$/, '');
+
+            if (filename.includes('-')) {
+              let nameFormat = localStorage.getItem('music_name_format') || 'Title-Artist';
+              const parts = filename.split('-');
+              const part1 = parts[0].trim();
+              const part2 = parts.slice(1).join('-').trim();
+
+              let guessTitle = nameFormat === 'Title-Artist' ? part1 : part2;
+              let guessArtist = nameFormat === 'Title-Artist' ? part2 : part1;
+
+              let res2 = await fetchFromLrcCx(guessTitle, guessArtist, true);
+
+              if (!res2.cover && !res2.lrc) {
+                 guessTitle = nameFormat === 'Title-Artist' ? part2 : part1;
+                 guessArtist = nameFormat === 'Title-Artist' ? part1 : part2;
+                 res2 = await fetchFromLrcCx(guessTitle, guessArtist, true);
+
+                 if (res2.cover || res2.lrc) {
+                    localStorage.setItem('music_name_format', nameFormat === 'Title-Artist' ? 'Artist-Title' : 'Title-Artist');
                  }
-                 fetchAndSetCover(foundCover); fetchAndSetLyrics(foundLrc);
-               }
-             } catch(e) { fetchAndSetCover(null); fetchAndSetLyrics(null); }
-          };
-          fetchFromPrimaryApi();
+              }
+
+              if (!finalCover && res2.cover) finalCover = res2.cover;
+              if (!finalLrc && res2.lrc) finalLrc = res2.lrc;
+              applyUI();
+
+            } else {
+              const res2_loose = await fetchFromLrcCx(filename, "", false);
+              if (!finalCover && res2_loose.cover) finalCover = res2_loose.cover;
+              if (!finalLrc && res2_loose.lrc) finalLrc = res2_loose.lrc;
+              applyUI();
+            }
+          }
+          //console.log(finalCover)
+          //console.log(finalLrc)
+          // --- 阶段3：iTunes & LRCLIB 兜底 ---
+          if (!finalCover || !finalLrc) {
+            const filename = currentSongName.replace(/\.[a-zA-Z0-9]+$/, '');
+            const qTerm = encodeURIComponent(filename);
+
+            if (!finalCover) {
+              //console.log("fetching from iTunes")
+               try {
+                  const itunesUrl = `https://itunes.apple.com/search?term=${qTerm}&media=music&entity=song&limit=1`;
+                  const data = await fetchProxyJSON(itunesUrl);
+                  //console.log(data)
+                  if (data && data.results && data.results.length > 0) {
+                     finalCover = data.results[0].artworkUrl100.replace('100x100bb', '600x600bb');
+                     applyUI();
+                  }
+               } catch (e) {}
+            }
+
+            if (!finalLrc) {
+              //console.log("fetching from LRCLIB")
+               try {
+                  const res3 = await fetch(`https://lrclib.net/api/search?q=${qTerm}`);
+                  if (res3.ok) {
+                     const data = await res3.json();
+                     //console.log(data)
+                     if (targetSongName === currentSongName && data && data.length > 0) {
+                        const fetchedLyrics = data[0].syncedLyrics || data[0].plainLyrics;
+                        if (fetchedLyrics) {
+                           finalLrc = fetchedLyrics;
+                           applyUI();
+                        }
+                     }
+                  }
+               } catch (e) {}
+            }
+          }
+        }
+
+        if (!finalCover) {
+          finalCover = defaultCover;
+          applyUI();
+        }
+
+        if (!finalLrc && targetSongName === currentSongName) {
+          parseLyrics(null); // 传入 null 会触发“暂无歌词，请欣赏音乐吧”
         }
 
         if (currentDid !== "") {
@@ -975,25 +1017,128 @@
         }
 
         if (info.url) {
-          localState.playlist = currentPlaylist; localState.songName = currentSongName; localStorage.setItem('local_state', JSON.stringify(localState));
+          localState.playlist = currentPlaylist;
+          localState.songName = currentSongName;
+          localStorage.setItem('local_state', JSON.stringify(localState));
           audioEl.src = info.url;
+
           if (!autoPlay) {
             const restoreProgress = () => {
               if (audioEl.duration) {
-                audioEl.currentTime = resumeTime; timeCurrentEl.innerText = formatTime(resumeTime);
-                timeDurationEl.innerText = formatTime(audioEl.duration); progressBar.style.width = (resumeTime / audioEl.duration * 100) + '%';
+                audioEl.currentTime = resumeTime;
+                timeCurrentEl.innerText = formatTime(resumeTime);
+                timeDurationEl.innerText = formatTime(audioEl.duration);
+                progressBar.style.width = (resumeTime / audioEl.duration * 100) + '%';
                 syncLyrics(resumeTime);
               }
               audioEl.removeEventListener('loadedmetadata', restoreProgress);
             };
-            if (audioEl.readyState >= 1) restoreProgress(); else audioEl.addEventListener('loadedmetadata', restoreProgress);
+            if (audioEl.readyState >= 1) restoreProgress();
+            else audioEl.addEventListener('loadedmetadata', restoreProgress);
             updatePlayButtonUI(false);
           } else {
             const playPromise = audioEl.play();
             if (playPromise !== undefined) playPromise.catch(error => {});
           }
         }
-      } catch (err) {}
+      } catch (err) {
+        console.error("播放歌曲时发生异常:", err);
+      }
+    }
+
+    // ==========================================
+    // 5. 刮削工具函数 (字符串净化、智能匹配)
+    // ==========================================
+
+    // 1. 字符串洗澡：去括号及内部内容、去所有空格、转小写
+    function cleanStr(str) {
+      if (!str) return "";
+      return str.replace(/[\(（].*?[\)）]/g, '').replace(/\s+/g, '').toLowerCase().trim();
+    }
+
+    // 2. 歌手切片：按常见连接词分割，清洗后返回数组
+    function parseArtists(str) {
+      if (!str) return [];
+      return str.split(/&|、|,|，|\/|\||和|与|feat\.|ft\./i)
+                .map(a => a.replace(/\s+/g, '').toLowerCase().trim())
+                .filter(a => a); // 过滤掉空字符串
+    }
+
+    // 3. 数组交集法：判断歌手是否匹配（只要有一个歌手对得上就算成功）
+    function isArtistMatch(localArtists, apiArtists) {
+      if (localArtists.length === 0 || apiArtists.length === 0) return false;
+      return localArtists.some(la => apiArtists.includes(la));
+    }
+
+    // 4. 通用代理请求包装器 (增加 3 秒超时控制)
+    async function fetchProxyJSON(targetUrl, timeoutMs = 3000) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+      try {
+        const proxyUrl = `${workingProxyPath}?urlb64=${btoa(targetUrl)}`;
+        // 把 signal 传给 fetch
+        const res = await fetch(proxyUrl, { signal: controller.signal });
+        clearTimeout(timeoutId); // 请求成功，清除定时器
+
+        if (res.ok) return await res.json();
+      } catch (e) {
+        // 如果是因为超时被 abort 的，可以在控制台悄悄记录一下
+        if (e.name === 'AbortError') {
+           console.warn(`代理请求超时 (${timeoutMs}ms):`, targetUrl);
+        }
+      } finally {
+        clearTimeout(timeoutId); // 确保定时器被清理
+      }
+      return null;
+    }
+
+    // 5. 核心 LrcCx 获取逻辑，返回 { cover, lrc }
+    async function fetchFromLrcCx(title, artist, isStrict) {
+      //console.log(`LrcCx 刮削开始：${title} ${artist}`);
+      let resCover = null;
+      let resLrc = null;
+      if (!title) return { cover: null, lrc: null };
+
+      const targetUrl = `https://api.lrc.cx/jsonapi?title=${encodeURIComponent(title)}` + (artist ? `&artist=${encodeURIComponent(artist)}` : "");
+      const data = await fetchProxyJSON(targetUrl);
+      //console.log("LrcCx 刮削结果：", data)
+      if (Array.isArray(data) && data.length > 0) {
+        const cLocalTitle = cleanStr(title);
+        const localArtists = parseArtists(artist);
+
+        for (const item of data) {
+          let isMatch = false;
+          const cApiTitle = cleanStr(item.title);
+
+          if (isStrict) {
+            // 严格匹配：歌名完全一致，且歌手有交集
+            const apiArtists = parseArtists(item.artist);
+            if (cLocalTitle === cApiTitle && isArtistMatch(localArtists, apiArtists)) {
+              isMatch = true;
+            }
+          } else {
+            // 宽松匹配：标题互相包含即可
+            if (cLocalTitle && cApiTitle && (cApiTitle.includes(cLocalTitle) || cLocalTitle.includes(cApiTitle))) {
+              isMatch = true;
+            }
+          }
+
+          if (isMatch) {
+            // 校验封面
+            if (!resCover && typeof item.cover === 'string' && item.cover.endsWith('.jpg') && await isCoverAcceptable(item.cover, 3000)) {
+              resCover = item.cover;
+            }
+            // 校验歌词
+            if (!resLrc && typeof item.lrc === 'string' && /\[(\d{1,2}):(\d{2})(?:\.\d{1,3})?\]/m.test(item.lrc)) {
+              resLrc = item.lrc;
+            }
+            // 如果都找齐了，直接跳出循环，不再往下找
+            if (resCover && resLrc) break;
+          }
+        }
+      }
+      return { cover: resCover, lrc: resLrc };
     }
 
 
