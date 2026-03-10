@@ -270,6 +270,22 @@
       #fp-lyrics-wrapper, #fp-lyrics-container, .lyric-line, .now-playing-title, .header, .playlist, .player-bar, .full-player { -webkit-user-select: none; -moz-user-select: none; user-select: none; }
       #fp-cover { -webkit-user-drag: none; user-drag: none; -webkit-user-select: none; user-select: none; pointer-events: auto; }
     }
+
+    /* ==========================================
+       8. 极致小屏幕 iPhone 适配 (保护两端，压缩中间)
+       ========================================== */
+    @media (max-width: 395px) {
+      .header { padding: 10px 8px; }
+      .header-logo-group { flex: 0 0 auto; margin-right: 4px; }
+      .header-controls { gap: 4px; }
+      .select-value {
+        padding: 6px 18px 6px 6px; /* 减少内边距 */
+        font-size: 13px;
+      }
+      #device-val { max-width: 75px; }
+      #playlist-val { max-width: 115px; }
+      .settings-btn { flex: 0 0 28px; }
+    }
   </style>
 </head>
 <body>
