@@ -182,14 +182,23 @@ docker cp /home/路径/iwebplayer.html 容器名称:/app/xiaomusic/static/iwebpl
   <img src="https://github.com/user-attachments/assets/b9069276-33e6-4ea1-9b74-cb7fe5ae0675" alt="效果图1" width="300">
   &nbsp;&nbsp;&nbsp;&nbsp;
   <img src="https://github.com/user-attachments/assets/b8dbf05f-a704-4582-be39-9c6bfae3c93e" alt="效果图2" width="300">
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="https://github.com/user-attachments/assets/43558287-f4fc-4fa0-a230-2ce02ea93692" alt="效果图3" width="300">
 </p>
 
 <!-- 第2行 -->
 <p>
-  <img src="https://github.com/user-attachments/assets/43558287-f4fc-4fa0-a230-2ce02ea93692" alt="效果图3" width="300">
+  <img src="https://github.com/user-attachments/assets/84264d31-5462-4da7-969a-a77a1730d54c" alt="效果图4" width="300">
   &nbsp;&nbsp;&nbsp;&nbsp;
   <img src="https://github.com/user-attachments/assets/08fbcb90-5c21-4bab-a27f-2ecc055f4672" alt="效果图4" width="300">
 </p>
+
+<!-- 第3行 -->
+<p>
+
+  
+</p>
+
 
 
 
