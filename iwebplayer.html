@@ -471,7 +471,7 @@
       cmdStatus: '/cmdstatus'
     };
 
-    let APP_VERSION = 'v0.6';
+    let APP_VERSION = 'v0.7';
     let APP_LOGO = document.getElementById('app-logo')?.content || '';
     const defaultCover = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23ec4899' /%3E%3Cstop offset='100%25' stop-color='%238b5cf6' /%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='50' fill='%231f2937' /%3E%3Ccircle cx='50' cy='50' r='40' fill='none' stroke='%23374151' stroke-width='1' /%3E%3Ccircle cx='50' cy='50' r='30' fill='none' stroke='%23374151' stroke-width='1' /%3E%3Ccircle cx='50' cy='50' r='20' fill='url(%23grad)' /%3E%3Ccircle cx='50' cy='50' r='5' fill='%23111827' /%3E%3Cpath d='M50 15 A35 35 0 0 1 85 50' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' opacity='0.3' /%3E%3C/svg%3E";
     const eqHtml = `<div class="playing-eq"><span class="eq-bar"></span><span class="eq-bar"></span><span class="eq-bar"></span></div>`;
@@ -805,7 +805,7 @@
         const settingData = await settingRes.json();
         allPlaylists = await listRes.json();
 
-        // 👇 应对新版本的兜底逻辑：如果后端没有传"收藏"（比如没有文件），我们强制为其创建一个空列表以占位
+        // 应对新版本的兜底逻辑：如果后端没有传"收藏"（比如没有文件），我们强制为其创建一个空列表以占位
         if (!allPlaylists["收藏"]) {
           allPlaylists["收藏"] = [];
         }
@@ -967,10 +967,14 @@
       // 先把黑名单里的歌单从总列表里剔除掉
       const allKeys = Object.keys(allPlaylists).filter(k => !hiddenPlaylists.includes(k));
 
+      const customKeys = allKeys
+        .filter(k => !predefinedOrder.includes(k))
+        .sort((a, b) => a.localeCompare(b, 'zh-CN'));
+
       // 筛选并合并排序
       const sortedKeys = [
         ...predefinedOrder.filter(k => allKeys.includes(k)),
-        ...allKeys.filter(k => !predefinedOrder.includes(k))
+        ...customKeys
       ];
 
       // 按照排序并过滤后的结果生成下拉列表
@@ -997,7 +1001,7 @@
           </div>
         `;
 
-        // 👇 完美长按逻辑（防幽灵事件、防滑动误触）
+        // 完美长按逻辑（防幽灵事件、防滑动误触）
         let pressTimer;
         let isLongPress = false;
         let startY = 0;
