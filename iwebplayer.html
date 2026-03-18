@@ -1138,7 +1138,7 @@
             if (!finalCover && res1.cover) finalCover = res1.cover; if (!finalLrc && res1.lrc) finalLrc = res1.lrc; applyUI();
           }
           if (!finalCover || !finalLrc) {
-            const filename = currentSongName.replace(/\.[a-zA-Z0-9]+$/, '');
+            const filename = currentSongName.replace(/\.(mp3|flac|wav|m4a|aac|ogg|ape|wma|alac)(.*)$/i, '').replace(/#.*$/, '');
             if (filename.includes('-')) {
               let nameFormat = localStorage.getItem('music_name_format') || 'Title-Artist'; const parts = filename.split('-'); const part1 = parts[0].trim(); const part2 = parts.slice(1).join('-').trim();
               let guessTitle = nameFormat === 'Title-Artist' ? part1 : part2; let guessArtist = nameFormat === 'Title-Artist' ? part2 : part1;
@@ -1154,7 +1154,7 @@
             }
           }
           if (!finalCover || !finalLrc) {
-            const filename = currentSongName.replace(/\.[a-zA-Z0-9]+$/, ''); const qTerm = encodeURIComponent(filename);
+            const filename = currentSongName.replace(/\.(mp3|flac|wav|m4a|aac|ogg|ape|wma|alac)(.*)$/i, '').replace(/#.*$/, ''); const qTerm = encodeURIComponent(filename);
             if (!finalCover) { try { const itunesUrl = `https://itunes.apple.com/search?term=${qTerm}&media=music&entity=song&limit=1`; const data = await fetchProxyJSON(itunesUrl); if (data && data.results && data.results.length > 0) { finalCover = data.results[0].artworkUrl100.replace('100x100bb', '600x600bb'); applyUI(); } } catch (e) {} }
             if (!finalLrc) { try { const res3 = await fetch(`https://lrclib.net/api/search?q=${qTerm}`); if (res3.ok) { const data = await res3.json(); if (targetSongName === currentSongName && data && data.length > 0) { const fetchedLyrics = data[0].syncedLyrics || data[0].plainLyrics; if (fetchedLyrics) { finalLrc = fetchedLyrics; applyUI(); } } } } catch (e) {} }
           }
