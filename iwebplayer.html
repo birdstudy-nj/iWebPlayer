@@ -866,6 +866,16 @@
 
         initDeviceDropdown(settingData.devices || {}); initPlaylistDropdown();
 
+        const savedDid = localStorage.getItem('local_device_id') || "";
+        if (savedDid !== "") {
+          const targetOpt = Array.from(deviceOpts.children).find(li => li.dataset.did === savedDid);
+          if (targetOpt) {
+            targetOpt.click();
+          } else {
+            localStorage.setItem('local_device_id', ""); // 如果上次的设备失效或被删，清空记录保留默认本机
+          }
+        }
+
         const savedVol = localStorage.getItem('player_volume') || 50; volumeSlider.value = savedVol; audioEl.volume = savedVol / 100; volumeText.innerText = savedVol + '%';
         updateVolumeIcon(savedVol); updateVolumeDeviceUI(); updatePlayModeUI(); loadingEl.style.display = 'none';
 
@@ -908,6 +918,7 @@
 
         li.addEventListener('click', async (e) => {
           e.stopPropagation();
+          localStorage.setItem('local_device_id', did);
           if (currentDid === "" && did !== "") {
             localCurrentTime = audioEl.currentTime || 0; audioEl.pause(); audioEl.src = ""; isPlaying = false; updatePlayButtonUI(false);
             progressBar.style.width = '0%'; timeCurrentEl.innerText = '00:00'; timeDurationEl.innerText = '00:00';
