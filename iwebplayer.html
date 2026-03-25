@@ -432,38 +432,42 @@
   </div>
 
   <div class="playlist-row" id="playlist-row">
-    <div class="custom-select" id="playlist-container" style="flex: 1; min-width: 0; transition: all 0.2s;">
-      <div class="select-value" id="playlist-val" style="max-width: 100%;">加载中</div>
-      <ul class="select-options" id="playlist-opts" style="width: 100%;"></ul>
-    </div>
+    <div style="display: flex; flex: 1; align-items: center; background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; height: 36px; box-sizing: border-box; min-width: 0; transition: all 0.2s;">
 
-    <div class="search-inline-wrap" id="search-inline-wrap">
-      <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" style="flex-shrink: 0; color: var(--text-sub);"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-      <input type="text" id="search-input" placeholder="搜歌名..." autocomplete="off">
-      <div class="search-actions">
-        <button class="search-icon-btn" id="search-clear" title="清除">
-          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-        </button>
-        <button class="search-icon-btn" id="search-save" title="保存搜索结果">
-          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-        </button>
+      <div class="custom-select" id="playlist-container" style="flex: 1; min-width: 0; transition: all 0.2s; height: 100%;">
+        <div class="select-value" id="playlist-val" style="max-width: 100%; border: none; background-color: transparent; height: 100%; box-shadow: none;">加载中</div>
+        <ul class="select-options" id="playlist-opts" style="width: 100%;"></ul>
       </div>
-    </div>
 
-    <div class="search-inline-wrap" id="mf-search-wrap">
-      <div class="custom-select" id="mf-plugin-container" style="flex: 0 0 auto;">
-        <div class="select-value" id="mf-plugin-val" data-value="all" style="background-color: transparent; border: none; color: var(--text-sub); font-size: 13px; padding: 0 16px 0 4px; box-shadow: none; max-width: 85px; height: 100%; line-height: 36px; background-position: right center; background-size: 10px;">所有插件</div>
-        <ul class="select-options" id="mf-plugin-opts" style="min-width: 120px;"></ul>
+      <div class="search-inline-wrap" id="search-inline-wrap" style="background: transparent; border: none; padding: 0; height: 100%;">
+        <div style="width: 1px; height: 14px; background: var(--border); margin: 0 4px; flex-shrink: 0;"></div>
+        <input type="text" id="search-input" placeholder="搜歌名..." autocomplete="off" style="padding: 0 8px;">
+        <div class="search-actions" style="margin-right: 8px;">
+          <button class="search-icon-btn" id="search-clear" title="清除">
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+          <button class="search-icon-btn" id="search-save" title="保存搜索结果">
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+          </button>
+        </div>
       </div>
-      <div style="width: 1px; height: 14px; background: var(--border); margin: 0 4px; flex-shrink: 0;"></div>
-      <input type="text" id="mf-search-input" placeholder="搜全网..." autocomplete="off">
-      <div class="search-actions">
-        <button class="search-icon-btn" id="mf-search-clear" title="清除">
-          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-        </button>
-        <button class="search-icon-btn show" id="mf-search-btn" title="搜索" style="color: var(--primary); background: rgba(236, 72, 153, 0.1);">
-          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-        </button>
+
+      <div class="search-inline-wrap" id="mf-search-wrap" style="background: transparent; border: none; padding: 0; height: 100%;">
+        <div style="width: 1px; height: 14px; background: var(--border); margin: 0 4px; flex-shrink: 0;"></div>
+        <div class="custom-select" id="mf-plugin-container" style="flex: 0 0 auto; height: 100%;">
+          <div class="select-value" id="mf-plugin-val" data-value="all" style="background-color: transparent; border: none; color: var(--text-sub); font-size: 13px; padding: 0 16px 0 4px; box-shadow: none; max-width: 85px; height: 100%; line-height: 36px; background-position: right center; background-size: 10px;">所有插件</div>
+          <ul class="select-options" id="mf-plugin-opts" style="min-width: 120px;"></ul>
+        </div>
+        <div style="width: 1px; height: 14px; background: var(--border); margin: 0 4px; flex-shrink: 0;"></div>
+        <input type="text" id="mf-search-input" placeholder="搜全网..." autocomplete="off" style="padding: 0 8px;">
+        <div class="search-actions" style="margin-right: 8px;">
+          <button class="search-icon-btn" id="mf-search-clear" title="清除">
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+          <button class="search-icon-btn show" id="mf-search-btn" title="搜索" style="color: var(--primary); background: rgba(236, 72, 153, 0.1);">
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -505,7 +509,7 @@
       </div>
 
       <div class="now-playing-info" id="np-info">
-        <div class="mini-cover" id="mini-cover">
+        <div class="mini-cover" id="mini-cover" style="display: none;">
           <img id="mini-cover-img" src="" alt="cover">
         </div>
         <div class="np-text-group">
@@ -567,6 +571,7 @@
           <li>iPhone锁屏、灵动岛、媒体库完美体验</li>
           <li>支持耳机线控（上一曲 / 下一曲 / 暂停）</li>
           <li>封面 & 歌词自动刮削展示</li>
+          <li>支持MusicFree插件</li>
         </ul>
         <div class="about-link">
           项目主页 / 更新地址：<br>
@@ -632,7 +637,7 @@
       <div class="about-header">
         <div class="about-title-wrap" style="display: flex; align-items: center; gap: 6px;">
           <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M19 11v-2a2 2 0 0 0-2-2h-2c-.5-1.5-2.5-1.5-3 0H8a2 2 0 0 0-2 2v2c-1.5.5-1.5 2.5 0 3v2a2 2 0 0 0 2 2h2c.5 1.5 2.5 1.5 3 0h2a2 2 0 0 0 2-2v-2c1.5-.5 1.5-2.5 0-3z"></path></svg>
-          <h2 style="font-size: 18px; font-weight: 800; margin-top: 4px;">MusicFree插件管理</h2>
+          <h2 style="font-size: 18px; font-weight: 800; margin-top: 4px;">MusicFree 插件管理</h2>
         </div>
       </div>
       <div class="about-body" style="flex: 1; overflow-y: auto; padding-bottom: 20px;">
@@ -658,7 +663,7 @@
     /* ==========================================
      * 1. 核心配置与全局状态
      * ========================================== */
-    const APP_VERSION = 'v0.9.1';
+    const APP_VERSION = 'v0.9.2';
     const APP_LOGO = document.getElementById('app-logo')?.content || '';
     const MSG_SEARCH_LOCAL_ONLY = "🚫 搜索仅支持本机播放，请保存后推送音箱";
     const API = {
@@ -796,6 +801,11 @@
     }
     function updateNpTitleUI(text, checkFav = true) {
       if (!text) return;
+      if (text === "暂无播放" || text === "设备已离线") {
+        miniCover.style.display = 'none';
+      } else {
+        miniCover.style.display = ''; // 有歌曲时恢复显示
+      }
       if (!checkFav) { npTitle.innerHTML = `<span class="np-title-text">${text}</span>`; return; }
       const isFav = favoriteList.includes(text);
       const favSvg = isFav ? `<svg style="flex-shrink: 0; position: relative; top: 2px;" viewBox="0 0 24 24" width="18" height="18" fill="var(--primary)" color="var(--primary)"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>` : '';
@@ -940,8 +950,30 @@
     function parseArtists(str) { if (!str) return []; return str.split(/&|、|,|，|\/|\||和|与|feat\.|ft\./i).map(a => a.replace(/\s+/g, '').toLowerCase().trim()).filter(a => a); }
     function isArtistMatch(localArtists, apiArtists) { if (localArtists.length === 0 || apiArtists.length === 0) return false; return localArtists.some(la => apiArtists.includes(la)); }
     async function fetchProxyJSON(targetUrl, timeoutMs = 3000) {
-      const controller = new AbortController(); const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-      try { const res = await fetch(`${workingProxyPath}?urlb64=${btoa(targetUrl)}`, { signal: controller.signal }); clearTimeout(timeoutId); if (res.ok) return await res.json(); } catch (e) {} finally { clearTimeout(timeoutId); } return null;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+      try {
+        // 🚀 核心重构：弃用 /proxy/music，改用正规的 /downloadjson 跨域提取器
+        const res = await fetch('/downloadjson', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: targetUrl }),
+            signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        if (res.ok) {
+            const data = await res.json();
+            // /downloadjson 接口会把抓到的纯文本塞进 content 字段，所以需要 JSON.parse 一次
+            if (data.ret === "OK" && data.content) {
+                return JSON.parse(data.content);
+            }
+        }
+      } catch (e) {
+          console.error("跨域抓取失败:", e);
+      } finally {
+          clearTimeout(timeoutId);
+      }
+      return null;
     }
     async function fetchFromLrcCx(title, artist, isStrict) {
       let resCover = null; let resLrc = null; if (!title) return { cover: null, lrc: null };
@@ -1009,7 +1041,7 @@
           if (currentDid !== "") {
               if (autoPlay) {
                   window.lastRemoteCmdTime = Date.now(); showToast("🎵 正在解析音源并推送给小爱同学...");
-                  fetch('/api/device/pushList', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ playlistName: '_online_webPush', did: currentDid, songList: [ rawItem ] }) })
+                  fetch('/api/device/pushList', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ playlistName: '_online_musicfree', did: currentDid, songList: onlineMusicItems.slice(index) }) })
                   .then(res => res.json()).then(data => { if (!data.success) showToast("❌ 推送失败：" + data.error); }).catch(err => { showToast("❌ 网络请求失败"); });
               }
               updateNpTitleUI(currentSongName); fpCover.src = defaultCover; miniCoverImg.src = defaultCover; fpLyricsContainer.innerHTML = '<div class="no-lyrics">已推送至音箱播放</div>';
@@ -1461,7 +1493,7 @@
                 const selectedPlugin = document.getElementById('mf-plugin-val').dataset.value;
                 songList = []; onlineMusicItems = []; playlistEl.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-sub); font-size: 14px;">正在全网抓取数据，请稍候...</div>';
                 try {
-                    const response = await fetch(`/api/search/online?keyword=${encodeURIComponent(keyword)}&plugin=${selectedPlugin}`);
+                    const response = await fetch(`/api/search/online?keyword=${encodeURIComponent(keyword)}&plugin=${selectedPlugin}&limit=50`);
                     const data = await response.json();
                     if (data.success && data.data && data.data.length > 0) {
                         onlineMusicItems = data.data; songList = onlineMusicItems.map(item => `${item.title} - ${item.artist}`);
