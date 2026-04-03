@@ -41,7 +41,36 @@ docker cp /home/路径/iwebplayer.html 容器名称:/app/xiaomusic/static/iwebpl
 - 在iPhone Safari浏览器访问 http://XiaoMusic地址:端口/static/iwebplayer.html
   
 💡 建议将该 URL 共享到手机桌面，这样更像独立的APP。
-    
+
+
+---
+
+## 📷 效果示意
+
+
+<!-- 第1行 -->
+<p>
+  <img src="https://github.com/user-attachments/assets/b9069276-33e6-4ea1-9b74-cb7fe5ae0675" alt="效果图1" width="300">
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="https://github.com/user-attachments/assets/9bf69bf1-4902-4045-a0fe-eb01e6c0af90" alt="效果图2" width="300">
+  
+</p>
+
+<!-- 第2行 -->
+<p>
+  <img src="https://github.com/user-attachments/assets/3491706d-1101-4f1b-bae9-e0906e2a1c26" alt="效果图3" width="300">
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="https://github.com/user-attachments/assets/06208e9f-c983-4f5d-be13-4db7e8a76c77" alt="效果图4" width="300">
+</p>
+
+<!-- 第3行 -->
+<p>
+<img src="https://github.com/user-attachments/assets/58dfbdf3-e532-4716-8b73-df92a53f1b62" alt="效果图5" width="300">
+ &nbsp;&nbsp;&nbsp;&nbsp;
+<img src="https://github.com/user-attachments/assets/5eb0eeb5-a2ea-4a1a-96c9-4b09df5de735" alt="效果图5" width="300">
+  
+</p>    
+
 ---
 
 
@@ -75,6 +104,8 @@ docker cp /home/路径/iwebplayer.html 容器名称:/app/xiaomusic/static/iwebpl
 - 封面旋转动画
     
 - 无歌词自动降级展示
+
+
     
 
 ---
@@ -173,35 +204,6 @@ docker cp /home/路径/iwebplayer.html 容器名称:/app/xiaomusic/static/iwebpl
 
 本机模式使用 LocalStorage 保存状态  
 远程模式读取设备播放模式 
-
----
-
-## 📷 效果示意
-
-
-<!-- 第1行 -->
-<p>
-  <img src="https://github.com/user-attachments/assets/b9069276-33e6-4ea1-9b74-cb7fe5ae0675" alt="效果图1" width="300">
-  &nbsp;&nbsp;&nbsp;&nbsp;
-  <img src="https://github.com/user-attachments/assets/9bf69bf1-4902-4045-a0fe-eb01e6c0af90" alt="效果图2" width="300">
-  
-</p>
-
-<!-- 第2行 -->
-<p>
-  <img src="https://github.com/user-attachments/assets/3491706d-1101-4f1b-bae9-e0906e2a1c26" alt="效果图3" width="300">
-  &nbsp;&nbsp;&nbsp;&nbsp;
-  <img src="https://github.com/user-attachments/assets/06208e9f-c983-4f5d-be13-4db7e8a76c77" alt="效果图4" width="300">
-</p>
-
-<!-- 第3行 -->
-<p>
-<img src="https://github.com/user-attachments/assets/58dfbdf3-e532-4716-8b73-df92a53f1b62" alt="效果图5" width="300">
- &nbsp;&nbsp;&nbsp;&nbsp;
-<img src="https://github.com/user-attachments/assets/5eb0eeb5-a2ea-4a1a-96c9-4b09df5de735" alt="效果图5" width="300">
-  
-</p>
-
 
 
 
