@@ -23,6 +23,8 @@
 - ✅ 封面 & 歌词自动刮削展示
 
 - ✅ 支持MusicFree插件
+
+- ✅ 支持自定义歌单
     
 
 完全单 HTML 文件，无依赖构建工具。
@@ -67,11 +69,20 @@ docker cp /home/路径/iwebplayer.html 容器名称:/app/xiaomusic/static/iwebpl
 <p>
 <img src="https://github.com/user-attachments/assets/58dfbdf3-e532-4716-8b73-df92a53f1b62" alt="效果图5" width="300">
  &nbsp;&nbsp;&nbsp;&nbsp;
-<img src="https://github.com/user-attachments/assets/5eb0eeb5-a2ea-4a1a-96c9-4b09df5de735" alt="效果图5" width="300">
+<img src="https://github.com/user-attachments/assets/1b14b97c-6e3b-4417-b5ec-66bf42bd5c20" alt="效果图5" width="300">
+  
+</p>    
+
+<!-- 第4行 -->
+<p>
+<img src="https://github.com/user-attachments/assets/004063df-c94a-482d-80e9-ededf444c31a" alt="效果图5" width="300">
+ &nbsp;&nbsp;&nbsp;&nbsp;
+<img src="https://github.com/user-attachments/assets/0ea9ee6b-771a-49c4-8b46-a37ee51796a6" alt="效果图5" width="300">
   
 </p>    
 
 ---
+
 
 
 ## ✨ 核心特性
