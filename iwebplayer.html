@@ -1137,7 +1137,7 @@
              <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px; vertical-align:-2px;"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg> 插件管理
           </li>
           <li class="select-option" id="setting-batch-import">
-             <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px; vertical-align:-2px;"><path d="m21.64 3.68-1.25-1.25a1.92 1.92 0 0 0-2.71 0L4.54 15.57a1.92 1.92 0 0 0 0 2.71l1.25 1.25a1.92 1.92 0 0 0 2.71 0L21.64 6.39a1.92 1.92 0 0 0 0-2.71z"></path><path d="m14 7 3 3"></path><path d="M5 6v4"></path><path d="M19 14v4"></path><path d="M10 2v2"></path><path d="M7 8H3"></path><path d="M21 16h-4"></path><path d="M11 3H9"></path></svg> 批量导入
+             <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px; vertical-align:-2px;"><path d="m21.64 3.68-1.25-1.25a1.92 1.92 0 0 0-2.71 0L4.54 15.57a1.92 1.92 0 0 0 0 2.71l1.25 1.25a1.92 1.92 0 0 0 2.71 0L21.64 6.39a1.92 1.92 0 0 0 0-2.71z"></path><path d="m14 7 3 3"></path><path d="M5 6v4"></path><path d="M19 14v4"></path><path d="M10 2v2"></path><path d="M7 8H3"></path><path d="M21 16h-4"></path><path d="M11 3H9"></path></svg> 批量定制
           </li>
           <li class="select-option" id="setting-download">
              <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px; vertical-align:-2px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> 下载设置
@@ -1464,7 +1464,7 @@
     /* ==========================================
      * 1. 核心配置与全局状态
      * ========================================== */
-    const APP_VERSION = 'v1.1';
+    const APP_VERSION = 'v1.12';
     const APP_LOGO = document.getElementById('app-logo')?.content || '';
     const API = {
       list: '/musiclist',
@@ -1504,6 +1504,12 @@
     let currentIndex = -1;
     let activeSongMenuIndex = -1;
     let currentSongName = "";
+
+    // 🕵️ 探路引擎专属状态
+    let preloadCache = null;         // 存放提前拿到的直链，格式: { index: 8, url: "http..." }
+    let deadSongIndexes = [];        // 阵亡名单：存放探路失败的歌曲索引
+    let consecutiveFailures = 0;     // 连跪计数器：超过5次直接熔断
+    let isScouting = false;          // 探子是否正在干活
 
     let isPlaying = false;
     let currentPlaylist = "";
@@ -2376,6 +2382,24 @@
      * ========================================== */
     async function playSong(index, autoPlay = true, resumeTime = 0) {
       if (index < 0 || index >= songList.length) return;
+
+      // 🛑 检查是否熔断
+      if (consecutiveFailures >= 5) {
+          showToast(`🛑 连续获取失败，已暂停。请检查网络或插件状态`);
+          if (!audioEl.paused) audioEl.pause();
+          updatePlayButtonUI(false);
+          consecutiveFailures = 0; // 清零等待用户手动恢复
+          return;
+      }
+
+      // ⏩ 如果这首歌在阵亡名单里，直接跳过并提示
+      if (deadSongIndexes.includes(index)) {
+          const skipName = window.getSongNameObj(songList[index]);
+          showToast(`⚠️ 已自动跳过失效歌曲：${skipName}`);
+          let nextIdx = index + 1 >= songList.length ? 0 : index + 1;
+          return playSong(nextIdx, autoPlay, resumeTime);
+      }
+
       highlightSongUI(index);
       const targetSongName = currentSongName;
 
@@ -2424,6 +2448,7 @@
           if (targetItem && targetItem.url && typeof targetItem.url === 'string' && targetItem.url.includes('plugin-url?data=')) {
               try {
                   const b64Data = targetItem.url.split('plugin-url?data=')[1];
+                  console.log("▶️ [准备播放] 完整假链接:", targetItem.url, "\n🧩 提取出的 Base64 编码:", b64Data);
                   const binStr = window.atob(b64Data);
                   const bytes = new Uint8Array(binStr.length);
                   for (let i = 0; i < binStr.length; i++) bytes[i] = binStr.charCodeAt(i);
@@ -2486,19 +2511,36 @@
                       }
                   };
 
-                  let sourceData = await fetchSourceData();
+                  let sourceData = null;
 
-                  // 第一次获取失败，等待 1 秒后自动重试
-                  if ((!sourceData || !sourceData.url) && currentDid === "") {
-                      showToast("⚠️ 获取链接失败，1秒后自动重试...");
-                      await new Promise(resolve => setTimeout(resolve, 1000));
-                      if (targetSongName !== currentSongName) return; // 拦截：等待期间用户已切歌
+                  // 💎 神级交接：如果探子提前拿到了这首歌的直链，直接用！
+                  if (preloadCache && preloadCache.index === index) {
+                      console.log("💎 使用提前探路的直链！秒播！");
+                      sourceData = { url: preloadCache.url };
+                  } else {
+                      // 没提前拿到，走正常的老路
                       sourceData = await fetchSourceData();
+
+                      // 🌟 新增判定：如果返回为空、无 URL 或明确告知 success: false，触发 1 秒后重试
+                      if ((!sourceData || !sourceData.url || sourceData.success === false) && currentDid === "") {
+                          showToast("⚠️ 获取链接失败，1秒后自动重试...");
+                          await new Promise(resolve => setTimeout(resolve, 1000));
+                          if (targetSongName !== currentSongName) return; // 拦截：等待期间用户已切歌
+                          sourceData = await fetchSourceData();
+                      }
                   }
 
                   if (targetSongName !== currentSongName) return; // 二次确认
 
-                  if (currentDid === "" && sourceData && sourceData.url) {
+                  // 🧹 播放成功后，打扫战场 (必须确保 success 不为 false)
+                  if (sourceData && sourceData.url && sourceData.success !== false) {
+                      consecutiveFailures = 0;   // 成功发声，连跪清零
+                      deadSongIndexes = [];      // 清空阵亡名单
+                  }
+                  preloadCache = null;           // 阅后即焚，清空缓存
+
+                  // 🌟 正常播放流程
+                  if (currentDid === "" && sourceData && sourceData.url && sourceData.success !== false) {
                     localState.playlist = currentPlaylist;
                     localState.songName = currentSongName;
                     localStorage.setItem('local_state', JSON.stringify(localState));
@@ -2522,16 +2564,41 @@
                       if (playPromise !== undefined) playPromise.catch(error => {});
                     }
                   } else if (currentDid === "") {
-                    // 第二次依然失败，自动切换下一首
-                    showToast("⚠️ 音源已失效，自动跳过该歌曲");
-                    updatePlayButtonUI(false);
-                    setTimeout(() => {
-                        // 确保跳过前，用户没有手动去点别的歌
-                        if (targetSongName === currentSongName) {
-                            const btnNext = document.getElementById('btn-next');
-                            if (btnNext) btnNext.click();
+                    // 🚨 第二次依然失败 (或明确返回 success: false)，打上失效烙印并切歌
+                    if (typeof songList[index] === 'object' && songList[index] !== null) {
+                        songList[index]._isDead = true; // 永久烙印
+                    }
+                    consecutiveFailures++; // 失败计数器 +1
+
+                    // 🎨 动态插入淡灰色失效标签
+                    const currentLi = document.getElementById('song-' + index);
+                    if (currentLi && !currentLi.querySelector('.fail-tag')) {
+                        const platformTag = currentLi.querySelector('.song-platform-tag:not(.fail-tag)');
+                        const failTag = document.createElement('div');
+                        failTag.className = 'song-platform-tag fail-tag';
+                        failTag.style.cssText = 'background: #e5e7eb; color: #4b5563; font-weight: normal; margin-right: -4px;';
+                        failTag.innerText = '失效';
+                        if (platformTag) {
+                            platformTag.parentNode.insertBefore(failTag, platformTag);
                         }
-                    }, 1000);
+                    }
+
+                    showToast("⚠️ 音源获取失败，自动跳过该歌曲");
+                    updatePlayButtonUI(false);
+
+                    // 🛑 接入连跪熔断机制
+                    if (consecutiveFailures >= 5) {
+                        showToast(`🛑 连续获取失败，已暂停。请检查网络或插件状态`);
+                        consecutiveFailures = 0;
+                    } else {
+                        setTimeout(() => {
+                            // 确保跳过前，用户没有手动去点别的歌
+                            if (targetSongName === currentSongName) {
+                                const btnNext = document.getElementById('btn-next');
+                                if (btnNext) btnNext.click();
+                            }
+                        }, 1000);
+                    }
                   }
               }
           }
@@ -2553,8 +2620,24 @@
               } catch (e) { }
           }
         } else {
-          const res = await fetch(API.info + encodeURIComponent(currentSongName));
-          const info = await res.json();
+          let info = null;
+
+          // 💎 本地神级交接
+          if (preloadCache && preloadCache.index === index) {
+              console.log("💎 使用提前探路的本地直链！秒播！");
+              info = { url: preloadCache.url };
+          } else {
+              const res = await fetch(API.info + encodeURIComponent(currentSongName));
+              info = await res.json();
+          }
+
+          // 🧹 播放成功后，打扫战场
+          if (info && info.url) {
+              consecutiveFailures = 0;   // 连跪清零
+              deadSongIndexes = [];      // 清空阵亡名单
+          }
+          preloadCache = null;           // 阅后即焚
+
           if (currentDid === "" && info.url) {
             localState.playlist = currentPlaylist;
             localState.songName = currentSongName;
@@ -2677,6 +2760,100 @@
           parseLyrics(null);
         }
       } catch (err) {}
+    }
+
+    // 🕵️ 智能探路函数
+    async function scoutNextSong(targetIndex, depth = 0) {
+        if (depth >= 5) {
+            console.log("🛑 连续5首歌探路失败，触发熔断");
+            return; // 连跪5次，停止探路
+        }
+        if (targetIndex === currentIndex || songList.length === 0) return;
+
+        isScouting = true;
+        const targetSongName = window.getSongNameObj(songList[targetIndex]);
+        const rawItem = songList[targetIndex];
+        const isOnlineObj = typeof rawItem === 'object' && rawItem !== null;
+
+        let realUrl = null;
+
+        // 尝试获取链接的闭包函数
+        const fetchUrl = async () => {
+            if (isOnlineObj) {
+                let targetItem = rawItem;
+                // 解包前端生成的假链接
+                if (targetItem.url && typeof targetItem.url === 'string' && targetItem.url.includes('plugin-url?data=')) {
+                    try {
+                        const b64Data = targetItem.url.split('plugin-url?data=')[1];
+                        const binStr = window.atob(b64Data);
+                        const bytes = new Uint8Array(binStr.length);
+                        for (let i = 0; i < binStr.length; i++) bytes[i] = binStr.charCodeAt(i);
+                        targetItem = JSON.parse(new TextDecoder('utf-8').decode(bytes));
+                    } catch (e) {}
+                }
+                const res = await fetch('/api/play/getMediaSource', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(targetItem)
+                });
+                const data = await res.json();
+                return data.url || null;
+            } else {
+                const res = await fetch(API.info + encodeURIComponent(targetSongName));
+                const data = await res.json();
+                return data.url || null;
+            }
+        };
+
+        try {
+            console.log(`🕵️ 正在探路第 ${targetIndex} 首: ${targetSongName}`);
+            realUrl = await fetchUrl();
+
+            if (!realUrl) {
+                console.log(`⚠️ 探路失败，等待1秒重试...`);
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                realUrl = await fetchUrl(); // 第二次重试
+            }
+
+            if (realUrl) {
+                console.log(`✅ 探路成功！拿到了直链`);
+                preloadCache = { index: targetIndex, url: realUrl };
+            } else {
+                throw new Error("彻底失败");
+            }
+        } catch (e) {
+            console.log(`❌ 确诊死链，画上标记，继续探下一首`);
+            deadSongIndexes.push(targetIndex);
+
+            // 🌟 修复：给对象永久打上失效烙印，并立刻在 UI 上画出淡灰色失效标签
+            if (typeof songList[targetIndex] === 'object' && songList[targetIndex] !== null) {
+                songList[targetIndex]._isDead = true;
+            }
+            const currentLi = document.getElementById('song-' + targetIndex);
+            if (currentLi && !currentLi.querySelector('.fail-tag')) {
+                const platformTag = currentLi.querySelector('.song-platform-tag:not(.fail-tag)');
+                const failTag = document.createElement('div');
+                failTag.className = 'song-platform-tag fail-tag';
+                failTag.style.cssText = 'background: #e5e7eb; color: #4b5563; font-weight: normal; margin-right: -4px;';
+                failTag.innerText = '失效';
+                if (platformTag) {
+                    platformTag.parentNode.insertBefore(failTag, platformTag);
+                }
+            }
+
+            consecutiveFailures++;
+
+            // 推算再下一首的索引
+            let nextNextIdx;
+            if (playMode === 2 && songList.length > 1) {
+                do { nextNextIdx = Math.floor(Math.random() * songList.length); } while (nextNextIdx === currentIndex || deadSongIndexes.includes(nextNextIdx));
+            } else {
+                nextNextIdx = targetIndex + 1 >= songList.length ? 0 : targetIndex + 1;
+            }
+
+            // 继续往下探路（递归）
+            await scoutNextSong(nextNextIdx, depth + 1);
+        }
+        isScouting = false;
     }
 
     /* ==========================================
@@ -3179,8 +3356,48 @@
             songList = [];
         }
       } else {
-        const allSongs = allPlaylists['所有歌曲'] || [];
-        allPlaylists['本地搜索'] = allSongs.filter(song => song.toLowerCase().includes(keyword));
+        const resultsMap = new Map();
+
+        // 🚫 黑名单：跳过系统大池子，我们只翻“真实抽屉”
+        const blacklist = [
+            '所有歌曲', '全部', '所有电台', '最近新增', '收藏',
+            '本地搜索', '在线资源', '_local_iwebplayer_search', '_online_iwebplayer_search'
+        ];
+
+        Object.keys(allPlaylists).forEach(listName => {
+            if (blacklist.includes(listName)) return; // 遇到大池子直接跳过
+
+            // 🧽 清洗标签显示名称（把底层的前缀和特殊音符扒掉，只留干净的名字）
+            let displayName = listName;
+            if (listName.startsWith('_online_mf_')) displayName = listName.replace('_online_mf_', '');
+            else if (listName.startsWith('_online_lx_')) displayName = listName.replace('_online_lx_', '');
+            displayName = displayName.replace(/^🎵\s*/, '');
+
+            allPlaylists[listName].forEach(rawItem => {
+                const songName = window.getSongNameObj(rawItem);
+                if (songName && songName.toLowerCase().includes(keyword)) {
+                    let wrappedItem;
+                    let uniqueKey;
+
+                    // 🏷️ 核心：判断是本地字符串，还是在线JSON对象，分别打上标签
+                    if (typeof rawItem === 'string') {
+                        // 本地歌曲：包装成对象，打上 _sourceName 标签，并加上 _isSavedOnlineStr 防误判，保证播放不出错
+                        wrappedItem = { _isSavedOnlineStr: true, name: rawItem, _sourceName: displayName };
+                        uniqueKey = 'local_' + displayName + '_' + songName;
+                    } else {
+                        // 在线歌曲：克隆原对象，打上 _sourceName 标签
+                        wrappedItem = { ...rawItem, _sourceName: displayName };
+                        const platform = rawItem.platform || (rawItem.tags && rawItem.tags.platform) || 'unknown';
+                        uniqueKey = 'online_' + platform + '_' + displayName + '_' + songName;
+                    }
+
+                    // 放入 Map，实现同抽屉同名去重，不同抽屉完美并存
+                    resultsMap.set(uniqueKey, wrappedItem);
+                }
+            });
+        });
+
+        allPlaylists['本地搜索'] = Array.from(resultsMap.values());
         songList = allPlaylists['本地搜索'];
       }
 
@@ -3330,7 +3547,8 @@
         defaultKey = Object.keys(allPlaylists).find(k => k !== '收藏' && k !== '全部') || Object.keys(allPlaylists)[0];
       }
 
-      const createOpt = (key) => {
+      // 🌟 新增参数 targetContainer，允许指定加入的容器
+      const createOpt = (key, targetContainer) => {
         const li = document.createElement('li');
         li.className = 'select-option';
         li.dataset.key = key;
@@ -3363,7 +3581,13 @@
           playlistVal.innerHTML = li.innerHTML;
           window.scrollTo({ top: 0, behavior: 'smooth' });
         });
-        playlistOpts.appendChild(li);
+
+        // 🌟 如果传了指定容器就放进去，否则放进默认大列表
+        if (targetContainer) {
+            targetContainer.appendChild(li);
+        } else {
+            playlistOpts.appendChild(li);
+        }
       };
 
       const predefinedOrder = ['在线资源', '本地搜索', '所有电台', '所有歌曲', '最近新增', '收藏', '下载'];
@@ -3393,7 +3617,24 @@
       });
       localFolderKeys.sort((a, b) => a.localeCompare(b, 'zh-CN'));
 
-      systemKeys.forEach(key => createOpt(key));
+      // 🌟 新增：吸顶容器 (标准的 HTML 嵌套结构: li > ul > li)
+      const stickyGroup = document.createElement('li');
+      stickyGroup.style.cssText = 'position: sticky; top: 0; z-index: 10; padding: 0; margin: 0; border-bottom: 1px solid var(--border); list-style: none; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-radius: 8px 8px 0 0; overflow: hidden;';
+      const stickyUl = document.createElement('ul');
+      stickyUl.style.cssText = 'padding: 0; margin: 0; list-style: none; background: var(--card-bg);';
+      stickyGroup.appendChild(stickyUl);
+      playlistOpts.appendChild(stickyGroup);
+
+      systemKeys.forEach(key => {
+          if (key === '在线资源' || key === '本地搜索') {
+              createOpt(key, stickyUl); // 把这两项放入吸顶容器
+          } else {
+              createOpt(key);
+          }
+      });
+
+      // 防御性设计：如果没有吸顶元素，隐藏该容器防占位
+      if (stickyUl.children.length === 0) stickyGroup.style.display = 'none';
 
       if (customKeys.length > 0) {
           if (systemKeys.length > 0) {
@@ -3418,7 +3659,8 @@
       if (defaultKey) {
         currentPlaylist = defaultKey;
         playlistVal.innerHTML = formatPlaylistText(defaultKey, window.getMergedSongList(defaultKey).length);
-        const firstOpt = Array.from(playlistOpts.children).find(li => li.dataset.key === defaultKey);
+        // 🌟 修复：改为 querySelectorAll 深度查找，无视嵌套层级
+        const firstOpt = Array.from(playlistOpts.querySelectorAll('.select-option')).find(li => li.dataset.key === defaultKey);
         if(firstOpt) firstOpt.classList.add('active');
         songList = window.getMergedSongList(defaultKey);
         playlistContainer.style.display = 'block';
@@ -3443,9 +3685,42 @@
       }
 
       songList.forEach((rawItem, index) => {
-        const isOnlineObj = typeof rawItem === 'object' && rawItem !== null;
+        // 🌟 修复：增加 !rawItem._isSavedOnlineStr 判断，防止被包装过的本地歌曲冒充在线资源
+        const isOnlineObj = typeof rawItem === 'object' && rawItem !== null && !rawItem._isSavedOnlineStr;
         const songName = window.getSongNameObj(rawItem);
-        const onlineSvg = isOnlineObj ? `<svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" style="margin-right: 6px; vertical-align: -2px; color: var(--primary); opacity: 0.8;" title="在线资源"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>` : '';
+
+        // 🌟 新增：提取并渲染微缩封面，失败则回退 SVG
+        let onlineSvg = '';
+        if (isOnlineObj) {
+            // 🌟 彻底还原最原始的 14x14 大小，和仅仅 6px 的右侧间距
+            const defaultSvg = `<svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" style="margin-right: 6px; color: var(--primary); opacity: 0.8; flex-shrink: 0;" title="在线资源"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>`;
+            // 将双引号转义，留给 img 的 onerror 属性使用
+            const fallbackSvg = defaultSvg.replace(/"/g, '&quot;');
+
+            // 尝试从不同的常见字段提取封面
+            let coverUrl = rawItem.artwork || rawItem.pic || (rawItem.tags && rawItem.tags.picture);
+
+            // 如果是被加入过自定义歌单的在线资源（底层已 Base64 包装），进行解包提取封面
+            if (!coverUrl && rawItem.url && typeof rawItem.url === 'string' && rawItem.url.includes('plugin-url?data=')) {
+                try {
+                    const b64Data = rawItem.url.split('plugin-url?data=')[1];
+                    const binStr = window.atob(b64Data);
+                    const bytes = new Uint8Array(binStr.length);
+                    for (let i = 0; i < binStr.length; i++) bytes[i] = binStr.charCodeAt(i);
+                    const decodedItem = JSON.parse(new TextDecoder('utf-8').decode(bytes));
+                    coverUrl = decodedItem.artwork || decodedItem.pic || (decodedItem.tags && decodedItem.tags.picture);
+                } catch(e) {}
+            }
+
+            if (coverUrl) {
+                // 🚀 封面图保持 40x40 饱满大图，并使用负边距防止撑高列表
+                onlineSvg = `<img src="${coverUrl}" style="width: 40px; height: 40px; border-radius: 8px; object-fit: cover; margin: -10px 10px -10px -2px; flex-shrink: 0; box-shadow: 0 2px 6px rgba(0,0,0,0.15);" alt="cover" onerror="this.outerHTML='${fallbackSvg}'">`;
+            } else {
+                // 如果没有封面，彻底还原原版的 SVG 体验
+                onlineSvg = defaultSvg;
+            }
+        }
+
         const li = document.createElement('li');
         li.className = 'song-item';
         li.id = 'song-' + index;
@@ -3511,8 +3786,19 @@
 
         const platformHtml = platformStr ? `<div class="song-platform-tag">${platformStr}</div>` : '';
 
+        // 🚨 新增：检查该歌曲是否遭遇过 403/404 报错被标记为失效
+        const isDead = (typeof rawItem === 'object' && rawItem !== null && rawItem._isDead);
+        const failHtml = isDead ? `<div class="song-platform-tag fail-tag" style="background: #e5e7eb; color: #4b5563; font-weight: normal; margin-right: -4px;">失效</div>` : '';
+
+        // 🏷️ 如果这首歌被我们贴了“来源纸条”，就生成一个极简的小圆角边框标签
+        let sourceNameStr = (typeof rawItem === 'object' && rawItem !== null && rawItem._sourceName) ? rawItem._sourceName : '';
+        const sourceHtml = sourceNameStr ? `<div style="font-size: 11px; color: var(--text-sub); border: 1px solid var(--border); padding: 1px 6px; border-radius: 6px; margin-left: 8px; flex-shrink: 0; white-space: nowrap;">${sourceNameStr}</div>` : '';
+
         li.innerHTML = `
-          <div class="song-info"><div class="song-name">${onlineSvg}${songName}</div></div>
+          ${onlineSvg}
+          <div class="song-info"><div class="song-name">${songName}</div></div>
+          ${sourceHtml}
+          ${failHtml}
           ${platformHtml}
           <div class="song-fav-icon" id="fav-${index}" style="display: ${favoriteList.includes(songName) ? 'block' : 'none'};">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="var(--primary)" color="var(--primary)"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
@@ -3931,10 +4217,46 @@
           if (currentDid === "" && 'mediaSession' in navigator) setupMediaSession();
         });
 
-        audioEl.addEventListener('pause', () => {
-          if (currentDid === "") {
+        // 🚨 监听原生播放器的报错 (专门捕获 403/404 等防盗链或网络拒绝错误)
+        audioEl.addEventListener('error', () => {
+          // 排除掉空链接或正在切歌时的误报
+          if (currentDid === "" && audioEl.src && audioEl.src !== window.location.href) {
+            console.log("❌ 原生播放器遭遇 403/404，触发兜底跳歌机制");
+            showToast("⚠️ 歌曲链接拒绝访问 (403)，自动跳过...");
+
+            if (currentIndex !== -1) {
+                // 1. 给这首歌对象永久打上“失效”烙印
+                if (typeof songList[currentIndex] === 'object' && songList[currentIndex] !== null) {
+                    songList[currentIndex]._isDead = true;
+                }
+                consecutiveFailures++; // 失败计数器 +1
+
+                // 2. 动态在当前列表界面上插入红色的 [失效] 标签
+                const currentLi = document.getElementById('song-' + currentIndex);
+                if (currentLi && !currentLi.querySelector('.fail-tag')) {
+                    const platformTag = currentLi.querySelector('.song-platform-tag:not(.fail-tag)');
+                    const failTag = document.createElement('div');
+                    failTag.className = 'song-platform-tag fail-tag';
+                    // 🌟 低调克制配色：淡灰底、深灰字、不加粗
+                    failTag.style.cssText = 'background: #e5e7eb; color: #4b5563; font-weight: normal; margin-right: -4px;';
+                    failTag.innerText = '失效';
+                    if (platformTag) {
+                        platformTag.parentNode.insertBefore(failTag, platformTag);
+                    }
+                }
+            }
+
+            // 3. 熔断判定或自动切歌
             updatePlayButtonUI(false);
-            if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
+            if (consecutiveFailures >= 5) {
+                showToast(`🛑 连续 5 首歌曲无法播放，已暂停。请检查网络或插件状态`);
+                consecutiveFailures = 0;
+            } else {
+                setTimeout(() => {
+                    const btnNext = document.getElementById('btn-next');
+                    if (btnNext) btnNext.click();
+                }, 1000);
+            }
           }
         });
 
@@ -3951,15 +4273,25 @@
           if (currentDid !== "" || !audioEl.duration || isDragging) return;
           const current = audioEl.currentTime;
           const duration = audioEl.duration;
+
+          // 🌟 新增：倒数 30 秒触发探路
+          if (duration - current <= 30 && duration - current > 0) {
+              if (!isScouting && !preloadCache && playMode !== 0 && currentDid === "") {
+                  // 推算下一首是谁
+                  let nextIdx;
+                  if (playMode === 2 && songList.length > 1) {
+                      do { nextIdx = Math.floor(Math.random() * songList.length); } while (nextIdx === currentIndex);
+                  } else {
+                      nextIdx = currentIndex + 1 >= songList.length ? 0 : currentIndex + 1;
+                  }
+                  scoutNextSong(nextIdx);
+              }
+          }
+
           progressBar.style.width = (current / duration * 100) + '%';
           timeCurrentEl.innerText = formatTime(current);
           timeDurationEl.innerText = formatTime(duration);
           syncLyrics(current);
-          if ('mediaSession' in navigator && 'setPositionState' in navigator.mediaSession) {
-            if (!isNaN(duration) && duration > 0) {
-              navigator.mediaSession.setPositionState({ duration: duration, playbackRate: audioEl.playbackRate, position: current });
-            }
-          }
         });
 
         btnMode.addEventListener('click', () => {
@@ -4394,7 +4726,7 @@
             settingBatchImportBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 if (settingsOpts) settingsOpts.classList.remove('show');
-                showDevModal('批量导入');
+                showDevModal('批量定制');
             });
         }
 
