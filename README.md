@@ -37,10 +37,10 @@
 只需将文件 **`iwebplayer.html`** 复制到 XiaoMusic 的 `static` 目录下：
 - Docker 方式（示例命令）：
 ```bash
-docker cp /home/路径/iwebplayer.html 容器名称:/app/xiaomusic/static/iwebplayer.html
+docker cp /home/路径/iwebplayer.html 容器名称:/app/xiaomusic/static/iwebplayer/iwebplayer.html
 ```
 ### ▶️ 使用方式
-- 在iPhone Safari浏览器访问 http://XiaoMusic地址:端口/static/iwebplayer.html
+- 在iPhone Safari浏览器访问 http://XiaoMusic地址:端口/static/iwebplayer/iwebplayer.html
   
 💡 建议将该 URL 共享到手机桌面，这样更像独立的APP。
 
@@ -69,8 +69,8 @@ docker cp /home/路径/iwebplayer.html 容器名称:/app/xiaomusic/static/iwebpl
 <p>
 <img src="https://github.com/user-attachments/assets/58dfbdf3-e532-4716-8b73-df92a53f1b62" alt="效果图5" width="300">
  &nbsp;&nbsp;&nbsp;&nbsp;
-<img src="https://github.com/user-attachments/assets/1b14b97c-6e3b-4417-b5ec-66bf42bd5c20" alt="效果图5" width="300">
-  
+<img src="https://github.com/user-attachments/assets/82c85ddb-fba1-4227-ba52-ae331f5b5bd1" alt="效果图5" width="300">
+
 </p>    
 
 <!-- 第4行 -->
