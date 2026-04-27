@@ -706,9 +706,27 @@
     align-items: center;
     z-index: 110;
     width: 54px;
-    height: 160px;
+    height: 230px;
     touch-action: none;
   }
+  .vol-adj-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-main);
+    font-size: 20px;
+    font-weight: 500;
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background 0.2s;
+    margin: 4px 0;
+    user-select: none;
+  }
+  .vol-adj-btn:active { background: var(--bg-color); }
   .volume-popup.show { display: flex; }
   .volume-text {
     font-size: 12px;
@@ -1588,7 +1606,9 @@
           </button>
           <div class="volume-popup" id="volume-popup">
             <div class="volume-text" id="volume-text">50%</div>
+            <button class="vol-adj-btn" id="vol-plus" style="margin-bottom: 12px;">+</button>
             <input type="range" id="volume-slider" min="0" max="100" value="50" orient="vertical">
+            <button class="vol-adj-btn" id="vol-minus" style="margin-top: 12px;">-</button>
           </div>
         </div>
       </div>
@@ -1890,7 +1910,7 @@
     /* ==========================================
      * 1. 核心配置与全局状态
      * ========================================== */
-    const APP_VERSION = 'v1.6.6';
+    const APP_VERSION = 'v1.6.9';
     const APP_LOGO = document.getElementById('app-logo')?.content || '';
     const LX_PLATFORMS_MAP = { 'tx': 'QQ', 'wy': '网易云', 'kg': '酷狗', 'kw': '酷我', 'mg': '咪咕' };
     const LX_BACKEND_NAMES = { 'tx': '小秋音乐', 'wy': '小芸音乐', 'kg': '小枸音乐', 'kw': '小蜗音乐', 'mg': '小蜜音乐' };
@@ -3244,19 +3264,61 @@
         };
 
         try {
-            console.log(`🕵️ 正在探路第 ${targetIndex} 首: ${targetSongName}`);
+            console.log(`🕵️ 正在提前获取第 ${targetIndex} 首链接: ${targetSongName}`);
             let fetchedData = await fetchUrl();
             realUrl = fetchedData?.url || null;
 
             if (!realUrl) {
-                console.log(`⚠️ 探路失败，等待1秒重试...`);
                 await new Promise(resolve => setTimeout(resolve, 1000));
                 fetchedData = await fetchUrl();
                 realUrl = fetchedData?.url || null;
             }
 
             if (realUrl) {
-                console.log(`✅ 探路成功！拿到了直链`);
+                // 🌟 终极方案：利用后端的 proxy 接口跨域拉取 Header 鉴定！
+                console.log(`🕵️ 拿到直链，借力后端 /proxy 接口跨域鉴定真伪...`);
+                let isFakeLink = false;
+
+                const controller = new AbortController();
+                // 给 3 秒钟时间获取头部信息
+                const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+                try {
+                    // 转 Base64，防止 URL 特殊字符干扰
+                    const utf8Bytes = new TextEncoder().encode(realUrl);
+                    const binStr = Array.from(utf8Bytes).map(b => String.fromCharCode(b)).join('');
+                    const urlb64 = window.btoa(binStr);
+
+                    // 请求代理接口
+                    const proxyRes = await fetch(`/proxy/music?urlb64=${urlb64}`, { signal: controller.signal });
+                    clearTimeout(timeoutId);
+
+                    const contentType = (proxyRes.headers.get('content-type') || '').toLowerCase();
+
+                    // 如果不是 2xx，或者返回类型是文本/JSON，说明链接无效或过期
+                    if (!proxyRes.ok || contentType.includes('json') || contentType.includes('text') || contentType.includes('html')) {
+                        isFakeLink = true;
+                        try {
+                            const errText = await proxyRes.text();
+                            console.log(`🧨 确诊假链接！后端抓获伪装成 200 的文本:`, errText.substring(0, 100));
+                        } catch(e){}
+                    } else {
+                        console.log(`✅ 代理头信息 Content-Type 为 ${contentType}，鉴定为真音频！`);
+                    }
+
+                    // 🌟 核心：拿到 Header 鉴定结果后，立刻主动掐断连接！
+                    // 这样后端的 StreamingResponse 会被立刻打断，不浪费任何服务器流量！
+                    controller.abort();
+
+                } catch (e) {
+                    // AbortError 是我们主动掐断的，或者是 3 秒超时的掐断，不做死链处理，放行给主播放器试错
+                }
+
+                if (isFakeLink) {
+                    throw new Error("格式鉴定失败 (后端 proxy 确诊为报错文本)");
+                }
+
+                console.log(`✅ 提前获取成功，已存入直链备用`);
                 preloadCache = { index: targetIndex, url: realUrl, data: fetchedData };
             } else {
                 throw new Error("彻底失败");
@@ -3266,7 +3328,6 @@
             if (!deadSongIndexes.includes(targetIndex)) {
                 deadSongIndexes.push(targetIndex);
             }
-
             if (typeof songList[targetIndex] === 'object' && songList[targetIndex] !== null) {
                 songList[targetIndex]._isDead = true;
             }
@@ -3281,8 +3342,6 @@
                     platformTag.parentNode.insertBefore(failTag, platformTag);
                 }
             }
-
-            consecutiveFailures++;
 
             let nextNextIdx;
             if (playMode === 2 && songList.length > 1) {
@@ -4440,6 +4499,12 @@
     }
 
     function renderPlaylist() {
+      // 🌟 修复 2：只要调用了歌曲列表渲染，就强制把海报墙藏起来，把列表展出来！
+      const grid = document.getElementById('playlist-grid');
+      const list = document.getElementById('playlist');
+      if (grid) grid.style.display = 'none';
+      if (list) list.style.display = 'block';
+
       playlistEl.innerHTML = '';
       let isCurrentSongInNewList = false;
       closeAllSongMenus();
@@ -5086,6 +5151,36 @@
             }, 300);
           }
         });
+
+        // 🌟 新增：音量加减按钮逻辑
+        const adjustVolumeBy = (delta) => {
+            let currentVol = parseInt(volumeSlider.value) || 0;
+            let newVol = currentVol + delta;
+            if (newVol > 100) newVol = 100;
+            if (newVol < 0) newVol = 0;
+
+            // 改变滑块的值
+            volumeSlider.value = newVol;
+            // 🌟 核心：手动触发 input 事件，完美复用上面写好的更新图标、存缓存、发接口请求的逻辑！
+            volumeSlider.dispatchEvent(new Event('input'));
+        };
+
+        const volPlusBtn = document.getElementById('vol-plus');
+        const volMinusBtn = document.getElementById('vol-minus');
+
+        if (volPlusBtn) {
+            volPlusBtn.addEventListener('click', (e) => {
+                e.stopPropagation(); // 防止点击穿透关闭弹窗
+                adjustVolumeBy(5);
+            });
+        }
+
+        if (volMinusBtn) {
+            volMinusBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                adjustVolumeBy(-5);
+            });
+        }
 
         function getPercentage(e) {
           const rect = progressBg.getBoundingClientRect();
@@ -5981,16 +6076,47 @@
                 });
             };
 
-            mfSearchInput.addEventListener('focus', renderSearchHistory);
-            mfSearchInput.addEventListener('click', renderSearchHistory);
+            // 🌟 1. 焦点获取与失去：实现胶囊的“弹簧式”隐藏与恢复
+            mfSearchInput.addEventListener('focus', (e) => {
+                if (typeof renderSearchHistory === 'function') renderSearchHistory();
+
+                // 如果当前在详情页（有详情缓存和胶囊），聚焦时隐藏胶囊，恢复提示词和搜歌按钮
+                const cap = document.getElementById('search-tag-capsule');
+                if (cap && localStorage.getItem('lx_detail_cache')) {
+                    cap.style.display = 'none';
+                    e.target.placeholder = '搜全网资源...';
+                    if (typeof window.toggleSearchBackBtn === 'function') window.toggleSearchBackBtn(false);
+                }
+            });
+
+            mfSearchInput.addEventListener('click', (e) => {
+                if (typeof renderSearchHistory === 'function') renderSearchHistory();
+            });
+
+            mfSearchInput.addEventListener('blur', (e) => {
+                // 延迟200ms，给用户点击“搜歌”或“历史记录”留出执行时间，防止冲突
+                setTimeout(() => {
+                    const cap = document.getElementById('search-tag-capsule');
+                    // 只有当详情缓存还在，且用户没有输入任何新字时，才恢复胶囊和返回按钮
+                    if (cap && localStorage.getItem('lx_detail_cache') && e.target.value.trim() === '') {
+                        cap.style.display = 'inline-flex';
+                        e.target.placeholder = '';
+                        if (typeof window.toggleSearchBackBtn === 'function') window.toggleSearchBackBtn(true);
+                        const mfSearchClear = document.getElementById('mf-search-clear');
+                        if (mfSearchClear) mfSearchClear.classList.remove('show');
+                    }
+                }, 200);
+            });
 
             // ==========================================
             // 监听输入框、回车键与退格键机制
             // ==========================================
             mfSearchInput.addEventListener('input', (e) => {
-
               const capsule = document.getElementById('search-tag-capsule');
-              if (capsule) { capsule.remove(); window.currentLxSortId = null; }
+              const hasDetail = !!localStorage.getItem('lx_detail_cache');
+
+              // 🌟 修复1：如果不在详情页（如标签搜索），打字才销毁旧胶囊；在详情页绝对不物理删除它
+              if (capsule && !hasDetail) { capsule.remove(); window.currentLxSortId = null; }
 
               mfSearchClear.classList.toggle('show', e.target.value.length > 0);
             });
@@ -5999,7 +6125,10 @@
                 // 退格键销毁胶囊
                 if (e.key === 'Backspace' && e.target.value === '') {
                     const capsule = document.getElementById('search-tag-capsule');
-                    if (capsule) {
+                    const hasDetail = !!localStorage.getItem('lx_detail_cache');
+
+                    // 🌟 修复2：只有在非详情页时，退格键才允许销毁胶囊
+                    if (capsule && !hasDetail) {
                         capsule.remove();
                         window.currentLxSortId = null;
                         e.target.placeholder = '搜全网资源...';
@@ -6015,12 +6144,19 @@
                 }
             });
 
-            // 原生清除按钮：只清空，不藏海报墙
-            mfSearchClear.addEventListener('click', () => {
+            // 原生清除按钮：只清空，如果是详情页则保留胶囊
+            mfSearchClear.addEventListener('click', (e) => {
+              e.stopPropagation();
               mfSearchInput.value = '';
-              const capsule = document.getElementById('search-tag-capsule');
-              if (capsule) { capsule.remove(); window.currentLxSortId = null; }
               mfSearchClear.classList.remove('show');
+
+              const capsule = document.getElementById('search-tag-capsule');
+              const hasDetail = !!localStorage.getItem('lx_detail_cache');
+
+              // 🌟 修复3：如果是详情页，点 X 只清空你打的错字，保留它背后的胶囊
+              if (capsule && !hasDetail) { capsule.remove(); window.currentLxSortId = null; }
+              if (!hasDetail) { mfSearchInput.placeholder = '搜全网资源...'; }
+
               mfSearchInput.focus();
             });
 
@@ -6028,6 +6164,9 @@
             // 点击特定歌单 -> 进详情
             // ==========================================
             window.triggerPlaylistDetail = async function(id, name, source) {
+                // 🌟 核心：点击进歌单前，先记录当前在海报墙滚到了多高
+                localStorage.setItem('lx_grid_scroll_y', window.scrollY);
+
                 let capsule = document.getElementById('search-tag-capsule');
                 if (!capsule) {
                     capsule = document.createElement('div');
@@ -6050,7 +6189,8 @@
                 capsule.dataset.source = source;
                 mfSearchInput.placeholder = '';
                 mfSearchInput.value = '';
-                document.getElementById('mf-search-clear')?.classList.add('show');
+                // 🌟 修复4：进入歌单详情瞬间，不需要显示 X 按钮（由右侧返回按钮接管退路）
+                document.getElementById('mf-search-clear')?.classList.remove('show');
 
                 const grid = document.getElementById('playlist-grid');
                 const list = document.getElementById('playlist');
@@ -6129,14 +6269,24 @@
                 if (!window.lxBaseUrl && type === 'tag') return;
 
                 // 核心判断：如果是打字搜歌单，处理历史记录和UI
+                // 核心判断：如果是打字搜歌单，处理历史记录和UI
                 if (type === 'keyword') {
                     if (!keyword) { showToast("请输入要搜索的歌单名"); return; }
                     if (!isLoadMore) {
                         mfSearchInput.blur();
                         const historyList = document.getElementById('mf-search-history-list');
                         if (historyList) historyList.classList.remove('show');
+
+                        // 🌟 3. 发起全新歌单搜索时，彻底斩断退路
+                        localStorage.removeItem('lx_detail_cache');
+                        const capsule = document.getElementById('search-tag-capsule');
+                        if (capsule) { capsule.remove(); window.currentLxSortId = null; }
+
                         window.addOnlineSearchHistory({ type: 'playlist', keyword: keyword });
                     }
+                } else if (type === 'tag' && !isLoadMore) {
+                    // 如果是点击了历史记录里的分类标签，同样清空详情缓存
+                    localStorage.removeItem('lx_detail_cache');
                 }
 
                 // 胶囊(tag)直接走LX源地址，文字搜歌单(keyword)走XiaoMusic后端桥接！
@@ -6149,6 +6299,9 @@
                 const list = document.getElementById('playlist');
 
                 if (!isLoadMore) {
+                    // 🌟 核心：发起新的搜索或点标签时，重置滚动记录
+                    localStorage.setItem('lx_grid_scroll_y', '0');
+
                     window.currentLxPlaylistPage = 1;
                     window.hasMoreLxPlaylists = true;
                     list.style.display = 'none';
@@ -6184,12 +6337,13 @@
                         }
 
                         // 判断是否还有下一页
+                        // 判断是否还有下一页
                         if (data.list.length < (data.limit || 30)) window.hasMoreLxPlaylists = false;
 
                         // 存入专属的海报墙抽屉 (lx_grid_cache)
                         localStorage.setItem('lx_grid_cache', JSON.stringify({
                             type: type === 'keyword' ? 'playlist' : 'tag',
-                            keyword: type === 'keyword' ? keyword : (document.getElementById('search-tag-capsule')?.innerText || ''),
+                            keyword: type === 'keyword' ? keyword : (document.getElementById('search-tag-capsule')?.textContent || ''),
                             sortId: window.currentLxSortId,
                             page: window.currentLxPlaylistPage,
                             hasMore: window.hasMoreLxPlaylists,
@@ -6273,6 +6427,10 @@
                 if (!isLoadMore) {
                     mfSearchInput.blur();
                     if (historyList) historyList.classList.remove('show');
+
+                    // 🌟 2. 发起全新单曲搜索时，彻底斩断退路，销毁详情缓存和胶囊
+                    localStorage.removeItem('lx_detail_cache');
+                    if (capsule) { capsule.remove(); window.currentLxSortId = null; }
 
                     window.addOnlineSearchHistory({ type: 'song', keyword: keyword });
 
@@ -6642,6 +6800,16 @@
             moreDiv.style.cursor = 'default';
         }
         grid.appendChild(moreDiv);
+
+        // 🌟 核心：恢复海报墙的滚动位置
+        const savedY = localStorage.getItem('lx_grid_scroll_y');
+        if (savedY && savedY !== '0') {
+            setTimeout(() => {
+                window.scrollTo({ top: parseInt(savedY), behavior: 'instant' });
+                // 恢复一次后即清除，防止下次进其他列表时莫名跳转
+                localStorage.setItem('lx_grid_scroll_y', '0');
+            }, 100);
+        }
     };
 
     window.applyEngineUIAndState = function(targetVal) {
@@ -6692,9 +6860,10 @@
         let cacheList = [];
         let cacheKeyword = '';
         let isCapsuleRestored = false;
+        let mode = 'song'; // 🌟 提升作用域，用于末尾判断
 
         const backendHistoryList = allPlaylists['_online_iwebplayer_search'] || [];
-        // 根据引擎动态控制 搜单按钮 和 分割线 的显示
+
         const playlistBtn = document.getElementById('mf-search-playlist-btn');
         const searchDivider = document.getElementById('mf-search-divider');
         if (playlistBtn) playlistBtn.style.display = (targetVal === 'LXServer' ? 'block' : 'none');
@@ -6704,7 +6873,6 @@
             try {
                 const detailCache = JSON.parse(localStorage.getItem('lx_detail_cache'));
                 const gridCache = JSON.parse(localStorage.getItem('lx_grid_cache'));
-
                 const oldSongCache = JSON.parse(localStorage.getItem('lx_online_search_cache'));
 
                 let activeCache = null;
@@ -6717,13 +6885,12 @@
                     currentSearchPage = activeCache.page || 1;
                     hasMoreOnlineSearch = activeCache.hasMore !== false;
 
-                    const mode = activeCache.type || 'song';
+                    mode = activeCache.type || 'song';
                     localStorage.setItem('last_search_action', mode === 'tag' ? 'playlist' : mode);
 
                     const grid = document.getElementById('playlist-grid');
                     const list = document.getElementById('playlist');
 
-                    // --- 分支 1：关键字搜索歌单 (恢复文字 + 海报墙) ---
                     if (mode === 'playlist' && currentPlaylist === '在线资源') {
                         if (grid) grid.style.display = 'grid';
                         if (list) list.style.display = 'none';
@@ -6732,7 +6899,7 @@
                         if (cachedPlList.length > 0) {
                             window.currentLxPlaylistPage = activeCache.page || 1;
                             window.hasMoreLxPlaylists = activeCache.hasMore !== false;
-                            window.currentLxSearchType = 'keyword';
+                            window.currentLxSearchType = 'keyword'; // 🌟 彻底修复：恢复正确的关键字搜索类型
                             window.lxPlaylistItems = cachedPlList;
                             if (typeof window.renderLxGridFromCache === 'function') window.renderLxGridFromCache(grid, cachedPlList);
                         } else {
@@ -6740,7 +6907,6 @@
                         }
                         cacheKeyword = cacheKeywordRaw;
                     }
-                    // --- 分支 2：标签搜索 (恢复胶囊 + 海报墙) ---
                     else if (mode === 'tag' && currentPlaylist === '在线资源') {
                         if (grid) grid.style.display = 'grid';
                         if (list) list.style.display = 'none';
@@ -6771,7 +6937,6 @@
                         cacheKeyword = '';
                         isCapsuleRestored = true;
                     }
-                    // --- 分支 3：歌单详情页 (恢复胶囊 + 歌曲列表) ---
                     else if (mode === 'detail' && currentPlaylist === '在线资源') {
                         if (grid) grid.style.display = 'none';
                         if (list) list.style.display = 'block';
@@ -6783,20 +6948,16 @@
                             capsule.className = 'search-tag-capsule';
                             document.getElementById('mf-search-input-wrap').insertBefore(capsule, document.getElementById('mf-search-input'));
                         }
-
                         const boxWidth = document.getElementById('mf-search-input-wrap')?.clientWidth || window.innerWidth;
                         let maxChars = (boxWidth <= 370 || window.innerWidth <= 480) ? 14 : 18;
                         const shortName = cacheKeywordRaw.length > maxChars ? cacheKeywordRaw.substring(0, maxChars) + '...' : cacheKeywordRaw;
-
                         capsule.innerText = shortName;
                         capsule.title = cacheKeywordRaw;
-
                         if (mfSearchInput) { mfSearchInput.value = ''; mfSearchInput.placeholder = ''; }
                         cacheList = activeCache.list || [];
                         cacheKeyword = '';
                         isCapsuleRestored = true;
                     }
-                    // --- 分支 4：常规搜单曲 ---
                     else {
                         if (grid) grid.style.display = 'none';
                         if (list) list.style.display = 'block';
@@ -6804,11 +6965,16 @@
                         cacheKeyword = cacheKeywordRaw;
                     }
 
-                    // 根据当前是详情还是海报，自动切换按钮 UI
                     if (typeof window.toggleSearchBackBtn === 'function') window.toggleSearchBackBtn(!!detailCache);
                 }
             } catch(e) {}
         } else {
+            const grid = document.getElementById('playlist-grid');
+            const list = document.getElementById('playlist');
+            if (grid) grid.style.display = 'none';
+            if (list) list.style.display = 'block';
+            if (typeof window.toggleSearchBackBtn === 'function') window.toggleSearchBackBtn(false);
+
             try {
                 const mfCache = JSON.parse(localStorage.getItem('mf_online_search_cache'));
                 if (mfCache) {
@@ -6817,9 +6983,6 @@
                     currentSearchPage = mfCache.page || 1;
                     hasMoreOnlineSearch = mfCache.hasMore !== false;
                     localStorage.setItem('last_search_action', 'song');
-                    document.getElementById('playlist-grid').style.display = 'none';
-                    document.getElementById('playlist').style.display = 'block';
-                    if (typeof window.toggleSearchBackBtn === 'function') window.toggleSearchBackBtn(false);
                 }
             } catch(e) {}
         }
@@ -6831,34 +6994,21 @@
         if (mfSearchInput) mfSearchInput.value = cacheKeyword;
         if (mfSearchClear) mfSearchClear.classList.toggle('show', cacheKeyword.length > 0 || isCapsuleRestored);
 
+        // 🌟 核心修复逻辑：只有在【非海报墙模式】且【当前是在线资源】时，才调用 renderPlaylist
         if (currentPlaylist === '在线资源') {
-            songList = cacheList;
-            onlineMusicItems = [...songList];
-            allPlaylists['在线资源'] = songList;
-            renderPlaylist();
-
-            const playlistVal = document.getElementById('playlist-val');
-            const text = formatPlaylistText('在线资源', songList.length);
-            if (playlistVal) playlistVal.innerHTML = text;
-            const mfOpt = document.querySelector('#playlist-opts .select-option[data-key="在线资源"]');
-            if (mfOpt) mfOpt.innerHTML = text;
-
-            if (mfSearchSaveBtn) mfSearchSaveBtn.classList.toggle('show', songList.length > 0);
-
-            if (currentSongName !== "" && songList.length > 0) {
-                const safeCurrent = cleanStr(currentSongName);
-                const matchIdx = songList.findIndex(song => cleanStr(song) === safeCurrent);
-                if (matchIdx !== -1) {
-                    currentIndex = matchIdx;
-                    document.getElementById('song-' + currentIndex)?.classList.add('playing');
-                    setTimeout(() => scrollToCurrentSong('smooth'), 100);
-                }
+            if (mode !== 'playlist' && mode !== 'tag') {
+                songList = cacheList;
+                onlineMusicItems = [...songList];
+                allPlaylists['在线资源'] = songList;
+                renderPlaylist();
+            } else {
+                // 如果是海报墙模式，我们已经手动处理过 UI 了，只需要同步一下顶栏文字即可
+                const playlistVal = document.getElementById('playlist-val');
+                const text = formatPlaylistText('在线资源', (window.lxPlaylistItems || []).length);
+                if (playlistVal) playlistVal.innerHTML = text;
             }
 
-            if (songList.length === 0) {
-                const playlistEl = document.getElementById('playlist');
-                if (playlistEl) playlistEl.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-sub); font-size: 14px;">暂无搜索结果，请输入歌曲全网搜索</div>';
-            }
+            if (mfSearchSaveBtn) mfSearchSaveBtn.classList.toggle('show', songList.length > 0 && mode !== 'playlist' && mode !== 'tag');
         }
     };
 
