@@ -1441,6 +1441,16 @@
           <li class="select-option" id="setting-config">
              <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" style="margin-right:6px; vertical-align:-2px;"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg> 后台配置
           </li>
+
+          <li class="select-option" id="setting-ios-desktop">
+             <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px; vertical-align:-2px;">
+               <rect x="4" y="4" width="6" height="6" rx="1"></rect>
+               <rect x="14" y="4" width="6" height="6" rx="1"></rect>
+               <rect x="4" y="14" width="6" height="6" rx="1"></rect>
+               <line x1="14" y1="17" x2="20" y2="17"></line>
+               <line x1="17" y1="14" x2="17" y2="20"></line>
+             </svg> 桌面 (iOS)
+          </li>
           <li class="select-option" id="setting-version">
              <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" style="margin-right:6px; vertical-align:-2px;"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg> 版本 <span id="setting-version-label"></span>
           </li>
@@ -1628,7 +1638,7 @@
         </div>
       </div>
       <div class="about-body">
-        <p><strong>iWebPlayer</strong> 是 <strong>XiaoMusic</strong> 的主题之一，专为 <strong>iPhone</strong> 交互优化，提供接近原生APP的音乐播放体验与远程设备控制能力。</p>
+        <p><strong>iWebPlayer</strong> 是 <strong>XiaoMusic</strong> 的主题之一，专为 <strong>iPhone</strong> 交互优化，媲美原生APP的音乐播放与小爱音箱控制。</p>
         <ul class="about-features">
           <li>适配 iPhone Safari 浏览器</li>
           <li>iPhone锁屏、灵动岛、媒体库完美体验</li>
@@ -1636,6 +1646,7 @@
           <li>封面 & 歌词自动刮削展示</li>
           <li>支持MusicFree插件</li>
           <li>支持调用LX Server接口(搜歌曲/搜歌单)</li>
+          <li>提供免签发Web App安装</li>
         </ul>
         <div class="about-link">
           项目主页 / 更新地址：<br>
@@ -1645,6 +1656,74 @@
       <div class="about-footer">
         <button class="about-secondary" id="about-migrate-btn" style="display: none;">升级旧版歌单</button>
         <button class="about-primary" id="about-ok">我知道了</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="about-modal-backdrop" id="ios-desktop-backdrop" aria-hidden="t<div class="about-modal-backdrop" id="ios-desktop-backdrop" aria-hidden="true">
+    <div class="about-modal" role="dialog" aria-modal="true">
+      <button class="about-close" id="ios-desktop-close" aria-label="关闭">×</button>
+
+      <div class="about-header" style="display: flex; align-items: center; gap: 12px; padding-bottom: 12px;">
+        <div class="about-logo" style="width: 32px; height: 32px; flex-shrink: 0; margin: 0; padding: 0;">
+          <img id="ios-desktop-logo-img" alt="Logo" style="width: 100%; height: 100%; object-fit: cover;" />
+        </div>
+        <div class="about-title-wrap">
+          <h2 style="font-size: 18px; font-weight: 800; margin: 0;">生成 iOS 桌面图标</h2>
+        </div>
+      </div>
+
+      <div class="about-body" style="padding-top: 0;">
+
+        <div id="ios-desktop-step1">
+            <div style="font-size: 13px; color: var(--text-sub); line-height: 1.5; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border);">
+              ✨ <b>一键添加到桌面</b>，彻底隐藏 Safari 浏览器地址栏与底部导航。为您提供 <b>全屏无感</b>、媲美原生 App 的沉浸式音乐体验！
+            </div>
+
+            <div id="ios-safari-warning" style="font-size: 12px; color: #ef4444; background: rgba(239, 68, 68, 0.1); padding: 8px 10px; border-radius: 8px; margin-bottom: 12px; font-weight: 500; display: none;">
+                ⚠️ 请确保您正在使用 iPhone <b>Safari 浏览器</b> 操作。
+            </div>
+            <div style="margin-bottom: 12px;">
+                <div style="font-size: 13px; font-weight: bold; margin-bottom: 6px; color: var(--text-main);">图标名称</div>
+                <div style="display: flex; align-items: center; background: var(--bg-color); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; height: 36px;">
+                    <div style="padding: 0 10px; font-size: 14px; color: var(--text-sub); background: var(--border); height: 100%; display: flex; align-items: center; border-right: 1px solid var(--border); font-weight: bold; flex-shrink: 0; user-select: none;">iWebPlayer</div>
+                    <input type="text" id="ios-desktop-name" placeholder="后缀(可选)，如: (家)" maxlength="10" autocomplete="off" style="flex: 1; border: none; background: transparent; padding: 0 10px; font-size: 14px; color: var(--text-main); outline: none; height: 100%;">
+                </div>
+            </div>
+            <div style="margin-bottom: 16px;">
+                <div style="font-size: 13px; font-weight: bold; margin-bottom: 6px; color: var(--text-main);">绑定服务地址</div>
+                <div class="modal-input-group" style="margin-top: 0; height: 36px; border-radius: 8px;">
+                    <input type="text" id="ios-desktop-url" autocomplete="off" style="padding: 0 10px; font-size: 14px; height: 100%;">
+                </div>
+            </div>
+            <div style="font-size: 11px; color: var(--text-sub); margin-top: 6px;">💡 点击 <b>生成并下载</b> 后，务必 <b>允许</b> 系统下载</div>
+        </div>
+
+        <div id="ios-desktop-step2" style="display: none; padding-bottom: 10px;">
+            <div style="text-align: center; margin-bottom: 16px;">
+                <svg viewBox="0 0 24 24" width="26" height="26" stroke="#10b981" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 6px;">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+                <div style="font-size: 16px; font-weight: bold; color: var(--text-main);">配置已下载</div>
+            </div>
+            <div style="background: var(--bg-color); border: 1px solid var(--border); padding: 12px 16px; border-radius: 12px; font-size: 13px; line-height: 1.6; color: var(--text-main);">
+                <div style="font-weight: bold; margin-bottom: 8px;">接下来请按照以下步骤操作：</div>
+                <ol style="margin: 0; padding-left: 20px; color: var(--text-sub);">
+                    <li style="margin-bottom: 4px;">在系统弹窗中允许下载描述文件。(已完成)</li>
+                    <li style="margin-bottom: 4px;">打开手机自带的 <b>设置</b> 应用。</li>
+                    <li style="margin-bottom: 4px;">前往 <b>通用 -> VPN与设备管理</b>。</li>
+                    <li>找到 <b>iWebPlayer Config</b> 并安装。<br>根据iPhone提示直至安装完成。</li>
+                    <li style="margin-top: 4px;">回到桌面，即可看到独立的原生 App 图标！</li>
+                </ol>
+            </div>
+        </div>
+
+      </div>
+
+      <div class="about-footer">
+        <button class="about-secondary" id="ios-desktop-cancel">取消</button>
+        <button class="about-primary" id="ios-desktop-confirm" style="border: 1px solid transparent;">生成并下载</button>
+        <button class="about-primary" id="ios-desktop-done" style="display: none; border: 1px solid transparent;">我知道了</button>
       </div>
     </div>
   </div>
@@ -1910,7 +1989,7 @@
     /* ==========================================
      * 1. 核心配置与全局状态
      * ========================================== */
-    const APP_VERSION = 'v1.6.9';
+    const APP_VERSION = 'v1.7.0';
     const APP_LOGO = document.getElementById('app-logo')?.content || '';
     const LX_PLATFORMS_MAP = { 'tx': 'QQ', 'wy': '网易云', 'kg': '酷狗', 'kw': '酷我', 'mg': '咪咕' };
     const LX_BACKEND_NAMES = { 'tx': '小秋音乐', 'wy': '小芸音乐', 'kg': '小枸音乐', 'kw': '小蜗音乐', 'mg': '小蜜音乐' };
@@ -6011,8 +6090,8 @@
                             </li>`;
                         } else {
                             let iconSvg = item.type === 'playlist'
-                                ? `<svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" style="opacity:0.5"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>`
-                                : `<svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" style="opacity:0.5"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>`;
+                                ? `<svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.5"><rect x="3" y="11" width="18" height="10" rx="2"></rect><path d="M5 7h14"></path><path d="M7 3h10"></path></svg>`
+                                : `<svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.5"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>`;
                             return `
                             <li class="history-item" data-index="${idx}">
                                 ${iconSvg}
@@ -6757,6 +6836,8 @@
         if (headerLogo) headerLogo.src = APP_LOGO;
         const aboutImg = document.getElementById('about-logo-img');
         if (aboutImg) aboutImg.src = APP_LOGO;
+        const iosLogoImg = document.getElementById('ios-desktop-logo-img');
+        if (iosLogoImg) iosLogoImg.src = APP_LOGO;
         setHeadIcon('icon', APP_LOGO);
         setHeadIcon('apple-touch-icon', APP_LOGO, { sizes: '180x180' });
       }
@@ -7346,6 +7427,172 @@
             loadingEl.innerText = '加载失败: ' + err.message + ' (可按 F12 查看控制台详情)';
         }
       }
+    }
+
+    // ==========================================
+    // iOS 桌面图标生成器
+    // ==========================================
+    const settingIosBtn = document.getElementById('setting-ios-desktop');
+    const iosModal = document.getElementById('ios-desktop-backdrop');
+    const iosStep1 = document.getElementById('ios-desktop-step1');
+    const iosStep2 = document.getElementById('ios-desktop-step2');
+    const iosBtnCancel = document.getElementById('ios-desktop-cancel');
+    const iosBtnConfirm = document.getElementById('ios-desktop-confirm');
+    const iosBtnDone = document.getElementById('ios-desktop-done');
+    const iosInputUrl = document.getElementById('ios-desktop-url');
+    const iosInputName = document.getElementById('ios-desktop-name');
+    const iosCloseBtn = document.getElementById('ios-desktop-close');
+
+    const closeIosModal = () => {
+        if (iosModal) {
+            iosModal.classList.remove('show');
+            iosModal.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = '';
+        }
+    };
+
+    if (settingIosBtn && iosModal) {
+
+        settingIosBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (settingsOpts) settingsOpts.classList.remove('show');
+
+            iosStep1.style.display = 'block';
+            iosStep2.style.display = 'none';
+            iosBtnCancel.style.display = 'inline-block';
+            iosBtnConfirm.style.display = 'inline-block';
+            iosBtnDone.style.display = 'none';
+
+            const ua = navigator.userAgent;
+            const isIOS = /iPad|iPhone|iPod/.test(ua);
+            // 条件：是iOS + 包含WebKit + 绝对不包含Chrome/QQ/微信/钉钉/Edge等标志
+            const isSafari = isIOS && /WebKit/i.test(ua) && !/(CriOS|FxiOS|OPiOS|mercury|EdgiOS|QQ|MicroMessenger|Weibo|Alipay|DingTalk)/i.test(ua);
+
+            const warningEl = document.getElementById('ios-safari-warning');
+            if (warningEl) {
+                // 如果是在原生 Safari 里，隐藏警告；否则显示刺眼的红底警告
+                warningEl.style.display = isSafari ? 'none' : 'block';
+            }
+
+            // 核心：动态截取并净化 URL (丢弃所有参数)
+            iosInputUrl.value = window.location.origin + window.location.pathname;
+            iosInputName.value = '';
+
+            iosModal.classList.add('show');
+            iosModal.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+        });
+
+        // 绑定关闭事件
+        iosCloseBtn?.addEventListener('click', closeIosModal);
+        iosBtnCancel?.addEventListener('click', closeIosModal);
+        iosBtnDone?.addEventListener('click', closeIosModal);
+        iosModal.addEventListener('click', (e) => { if (e.target === iosModal) closeIosModal(); });
+
+        // 辅助函数：生成标准的随机 UUID
+        const generateUUID = () => {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        };
+
+        // 点击生成并下载
+        iosBtnConfirm.addEventListener('click', () => {
+            const targetUrl = iosInputUrl.value.trim();
+            if (!targetUrl) {
+                showToast("请输入绑定的服务地址");
+                return;
+            }
+
+            // 提取 URL 中的域名或 IP (例如: 192.168.1.100 或 music.xxx.com)
+            let hostIdentifier = "";
+            try {
+                const urlObj = new URL(targetUrl);
+                hostIdentifier = urlObj.hostname;
+            } catch (e) {
+                // 如果 URL 不规范，尝试简单截取
+                hostIdentifier = targetUrl.replace(/^https?:\/\//, '').split(/[:\/]/)[0];
+            }
+
+            // 组装 App 名字：前缀固定 + 用户自定义后缀
+            const suffix = iosInputName.value.trim();
+            const finalLabel = suffix ? `iWebPlayer${suffix}` : 'iWebPlayer';
+
+            // 构造最终显示的描述文件标题
+            const configDisplayName = `${finalLabel} Config [${hostIdentifier}]`;
+
+            // 抽取 Base64 纯净图片代码
+            const logoMeta = document.getElementById('app-logo')?.content || '';
+            let base64Icon = '';
+            if (logoMeta.includes('base64,')) {
+                base64Icon = logoMeta.split('base64,')[1];
+            }
+
+            const uuid1 = generateUUID();
+            const uuid2 = generateUUID();
+
+            // 拼装苹果描述文件 XML
+            const mobileConfigTemplate = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+<key>PayloadContent</key>
+<array>
+<dict>
+<key>FullScreen</key>
+<true/>
+<key>IsRemovable</key>
+<true/>
+<key>Label</key>
+<string>${finalLabel}</string>
+<key>PayloadIdentifier</key>
+<string>com.iwebplayer.webclip.${uuid1}</string>
+<key>PayloadType</key>
+<string>com.apple.webClip.managed</string>
+<key>PayloadUUID</key>
+<string>${uuid1}</string>
+<key>PayloadVersion</key>
+<integer>1</integer>
+<key>Precomposed</key>
+<true/>
+<key>URL</key>
+<string>${targetUrl}</string>
+${base64Icon ? `<key>Icon</key><data>${base64Icon}</data>` : ''}
+</dict>
+</array>
+<key>PayloadDisplayName</key>
+<string>${configDisplayName}</string>
+<key>PayloadDescription</key>
+<string>添加 iWebPlayer 沉浸式桌面图标</string>
+<key>PayloadIdentifier</key>
+<string>com.iwebplayer.profile.${uuid2}</string>
+<key>PayloadType</key>
+<string>Configuration</string>
+<key>PayloadUUID</key>
+<string>${uuid2}</string>
+<key>PayloadVersion</key>
+<integer>1</integer>
+</dict>
+</plist>`;
+
+            const blob = new Blob([mobileConfigTemplate], { type: 'application/x-apple-aspen-config' });
+            const blobUrl = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = blobUrl;
+            // 文件名也改为带 Host 的形式，更加一目了然
+            a.download = `${finalLabel}_${hostIdentifier}.mobileconfig`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(blobUrl);
+
+            iosStep1.style.display = 'none';
+            iosStep2.style.display = 'block';
+            iosBtnCancel.style.display = 'none';
+            iosBtnConfirm.style.display = 'none';
+            iosBtnDone.style.display = 'block';
+        });
     }
 
     document.addEventListener('DOMContentLoaded', init);
