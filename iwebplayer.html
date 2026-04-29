@@ -1389,7 +1389,37 @@
   }
 
   /* ==========================================
-     13. 宽屏适配
+     13. iOS 桌面安装专用样式
+     ========================================== */
+  .ios-install-pane { display: none; animation: fadeIn 0.2s; }
+  .ios-install-pane.active { display: block; }
+
+  /* 底部偏右引导气泡 */
+  .ios-guide-bubble {
+    position: fixed; bottom: calc(20px + env(safe-area-inset-bottom)); right: 15px; left: auto;
+    transform: translateY(20px); width: 260px; background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 16px; padding: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    z-index: 1000; opacity: 0; pointer-events: none; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex; flex-direction: column; align-items: flex-end; color: var(--text-main); text-align: right;
+  }
+  @media (prefers-color-scheme: dark) {
+    .ios-guide-bubble { background: rgba(31, 41, 55, 0.95); border-color: rgba(255,255,255,0.1); color: #fff; }
+  }
+  .ios-guide-bubble.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+
+  /* 🌟 紫红底色白箭头 */
+  .ios-guide-arrow {
+    margin-top: 12px; margin-right: 12px; width: 28px; height: 28px;
+    background: var(--primary); color: #fff; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 10px rgba(236, 72, 153, 0.3);
+    animation: ios-bounce 1.2s infinite;
+  }
+  @keyframes ios-bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(8px); } }
+
+  /* ==========================================
+     14. 宽屏适配
      ========================================== */
   @media (min-width: 600px) {
     html { background-color: #e5e7eb; overflow-y: scroll; scrollbar-gutter: stable; }
@@ -1660,71 +1690,108 @@
     </div>
   </div>
 
-  <div class="about-modal-backdrop" id="ios-desktop-backdrop" aria-hidden="t<div class="about-modal-backdrop" id="ios-desktop-backdrop" aria-hidden="true">
-    <div class="about-modal" role="dialog" aria-modal="true">
+  <div class="about-modal-backdrop" id="ios-desktop-backdrop" aria-hidden="true">
+    <div class="about-modal" role="dialog" aria-modal="true" style="height: auto; max-height: 85vh; display: flex; flex-direction: column;">
       <button class="about-close" id="ios-desktop-close" aria-label="关闭">×</button>
 
-      <div class="about-header" style="display: flex; align-items: center; gap: 12px; padding-bottom: 12px;">
-        <div class="about-logo" style="width: 32px; height: 32px; flex-shrink: 0; margin: 0; padding: 0;">
-          <img id="ios-desktop-logo-img" alt="Logo" style="width: 100%; height: 100%; object-fit: cover;" />
+      <div class="about-header" style="flex-direction: column; align-items: flex-start; padding-bottom: 0; flex-shrink: 0;">
+        <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px; margin-bottom: 12px;">
+          <div class="about-logo" style="width: 28px; height: 28px; border-radius: 6px; flex-shrink: 0;">
+            <img id="ios-header-logo-img" alt="Logo" style="width: 100%; height: 100%; object-fit: cover;" />
+          </div>
+          <h2 style="font-size: 18px; font-weight: 800; margin: 0;">添加到 iPhone 主屏幕</h2>
         </div>
-        <div class="about-title-wrap">
-          <h2 style="font-size: 18px; font-weight: 800; margin: 0;">生成 iOS 桌面图标</h2>
+
+        <div style="display: flex; gap: 20px; border-bottom: 1px solid var(--border); width: 100%;">
+          <div class="ios-plugin-tab active" data-target="ios-mode-shortcut" style="padding-bottom: 10px; cursor: pointer; font-weight: bold; color: var(--primary); border-bottom: 2px solid var(--primary); transition: color 0.2s;">快捷链接</div>
+          <div class="ios-plugin-tab" data-target="ios-mode-pwa" style="padding-bottom: 10px; cursor: pointer; font-weight: 500; color: var(--text-sub); border-bottom: 2px solid transparent; transition: color 0.2s;">PWA模式</div>
+          <div class="ios-plugin-tab" data-target="ios-mode-profile" style="padding-bottom: 10px; cursor: pointer; font-weight: 500; color: var(--text-sub); border-bottom: 2px solid transparent; transition: color 0.2s;">配置直装</div>
         </div>
       </div>
 
-      <div class="about-body" style="padding-top: 0;">
+      <div class="about-body" style="flex: 1; padding: 15px 18px 25px 18px; overflow-y: auto;">
+        <div id="ios-mode-shortcut" class="ios-install-pane active">
+          <p style="font-size: 13px; font-weight: bold; margin-bottom: 4px; color: var(--text-main);">✨ 优点：</p>
+          <p style="font-size: 13px; color: var(--text-sub); margin-bottom: 10px; padding-left: 6px;">功能完整，后台连播最稳定，锁屏后保活能力强。</p>
+          <p style="font-size: 13px; font-weight: bold; margin-bottom: 4px; color: var(--text-main);">💡 不足：</p>
+          <p style="font-size: 13px; color: var(--text-sub); margin-bottom: 4px; padding-left: 6px;">有浏览器地址栏。</p>
+          <p style="font-size: 13px; color: var(--text-sub); margin-bottom: 12px; padding-left: 6px;">正在播放时点击桌面图标会中断播放，需要点灵动岛进入。</p>
 
-        <div id="ios-desktop-step1">
-            <div style="font-size: 13px; color: var(--text-sub); line-height: 1.5; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border);">
-              ✨ <b>一键添加到桌面</b>，彻底隐藏 Safari 浏览器地址栏与底部导航。为您提供 <b>全屏无感</b>、媲美原生 App 的沉浸式音乐体验！
-            </div>
-
-            <div id="ios-safari-warning" style="font-size: 12px; color: #ef4444; background: rgba(239, 68, 68, 0.1); padding: 8px 10px; border-radius: 8px; margin-bottom: 12px; font-weight: 500; display: none;">
-                ⚠️ 请确保您正在使用 iPhone <b>Safari 浏览器</b> 操作。
-            </div>
-            <div style="margin-bottom: 12px;">
-                <div style="font-size: 13px; font-weight: bold; margin-bottom: 6px; color: var(--text-main);">图标名称</div>
-                <div style="display: flex; align-items: center; background: var(--bg-color); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; height: 36px;">
-                    <div style="padding: 0 10px; font-size: 14px; color: var(--text-sub); background: var(--border); height: 100%; display: flex; align-items: center; border-right: 1px solid var(--border); font-weight: bold; flex-shrink: 0; user-select: none;">iWebPlayer</div>
-                    <input type="text" id="ios-desktop-name" placeholder="后缀(可选)，如: (家)" maxlength="10" autocomplete="off" style="flex: 1; border: none; background: transparent; padding: 0 10px; font-size: 14px; color: var(--text-main); outline: none; height: 100%;">
-                </div>
-            </div>
-            <div style="margin-bottom: 16px;">
-                <div style="font-size: 13px; font-weight: bold; margin-bottom: 6px; color: var(--text-main);">绑定服务地址</div>
-                <div class="modal-input-group" style="margin-top: 0; height: 36px; border-radius: 8px;">
-                    <input type="text" id="ios-desktop-url" autocomplete="off" style="padding: 0 10px; font-size: 14px; height: 100%;">
-                </div>
-            </div>
-            <div style="font-size: 11px; color: var(--text-sub); margin-top: 6px;">💡 点击 <b>生成并下载</b> 后，务必 <b>允许</b> 系统下载</div>
+          <div style="font-size: 13px; font-weight: bold; margin-bottom: 8px; color: var(--text-main);">🛠️ 操作步骤：</div>
+          <div style="font-size: 13px; color: var(--text-main); background: var(--bg-color); padding: 12px; border-radius: 10px; line-height: 1.8;">
+            1. 点击浏览器底部的 <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" style="vertical-align: text-bottom; margin: 0 2px;"><circle cx="5" cy="12" r="2.5"></circle><circle cx="12" cy="12" r="2.5"></circle><circle cx="19" cy="12" r="2.5"></circle></svg> 菜单<br>
+            2. 选择 <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: text-bottom; margin: 0 2px;"><path d="M8 9H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2h-2"></path><polyline points="15 5 12 1 9 5"></polyline><line x1="12" y1="1" x2="12" y2="14"></line></svg> <b>共享</b><br>
+            3. 选择 <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: text-bottom; margin: 0 2px;"><rect x="4" y="4" width="16" height="16" rx="3" ry="3"></rect><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg> <b>添加到主屏幕</b><br>
+            4. <span style="color: #ef4444; font-weight: bold;">将【作为网页App打开】开关关闭</span> <svg viewBox="0 0 40 24" width="26" height="16" style="vertical-align: text-bottom; margin-left: 2px;"><rect width="40" height="24" rx="12" fill="#e5e7eb"/><circle cx="12" cy="12" r="10" fill="#fff" filter="drop-shadow(0 1px 2px rgba(0,0,0,0.2))"/></svg><br>
+            5. 点击右上角 <b>添加</b><br>
+            6. 自动回到桌面，即可看到独立的原生 App 图标！
+          </div>
+          <button class="about-primary start-ios-guide-btn" style="width: 100%; margin-top: 15px;" onclick="window.startIosGuide(event)">开启安装引导</button>
         </div>
 
-        <div id="ios-desktop-step2" style="display: none; padding-bottom: 10px;">
-            <div style="text-align: center; margin-bottom: 16px;">
-                <svg viewBox="0 0 24 24" width="26" height="26" stroke="#10b981" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 6px;">
-                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline>
-                </svg>
-                <div style="font-size: 16px; font-weight: bold; color: var(--text-main);">配置已下载</div>
-            </div>
-            <div style="background: var(--bg-color); border: 1px solid var(--border); padding: 12px 16px; border-radius: 12px; font-size: 13px; line-height: 1.6; color: var(--text-main);">
-                <div style="font-weight: bold; margin-bottom: 8px;">接下来请按照以下步骤操作：</div>
-                <ol style="margin: 0; padding-left: 20px; color: var(--text-sub);">
-                    <li style="margin-bottom: 4px;">在系统弹窗中允许下载描述文件。(已完成)</li>
-                    <li style="margin-bottom: 4px;">打开手机自带的 <b>设置</b> 应用。</li>
-                    <li style="margin-bottom: 4px;">前往 <b>通用 -> VPN与设备管理</b>。</li>
-                    <li>找到 <b>iWebPlayer Config</b> 并安装。<br>根据iPhone提示直至安装完成。</li>
-                    <li style="margin-top: 4px;">回到桌面，即可看到独立的原生 App 图标！</li>
-                </ol>
-            </div>
+        <div id="ios-mode-pwa" class="ios-install-pane">
+          <p style="font-size: 13px; font-weight: bold; margin-bottom: 4px; color: var(--text-main);">✨ 优点：</p>
+          <p style="font-size: 13px; color: var(--text-sub); margin-bottom: 10px; padding-left: 6px;">无地址栏，100% 沉浸感，媲美原生UI体验。</p>
+          <p style="font-size: 13px; font-weight: bold; margin-bottom: 4px; color: var(--text-main);">💡 不足：</p>
+          <p style="font-size: 13px; color: var(--text-sub); margin-bottom: 12px; padding-left: 6px;">受 iOS 限制，锁屏暂停后系统会强制终止进程，无法恢复播放</p>
+
+          <div style="font-size: 13px; font-weight: bold; margin-bottom: 8px; color: var(--text-main);">🛠️ 操作步骤：</div>
+          <div style="font-size: 13px; color: var(--text-main); background: var(--bg-color); padding: 12px; border-radius: 10px; line-height: 1.8;">
+            1. 点击浏览器底部的 <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" style="vertical-align: text-bottom; margin: 0 2px;"><circle cx="5" cy="12" r="2.5"></circle><circle cx="12" cy="12" r="2.5"></circle><circle cx="19" cy="12" r="2.5"></circle></svg> 菜单<br>
+            2. 选择 <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: text-bottom; margin: 0 2px;"><path d="M8 9H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2h-2"></path><polyline points="15 5 12 1 9 5"></polyline><line x1="12" y1="1" x2="12" y2="14"></line></svg> <b>共享</b><br>
+            3. 选择 <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: text-bottom; margin: 0 2px;"><rect x="4" y="4" width="16" height="16" rx="3" ry="3"></rect><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg> <b>添加到主屏幕</b><br>
+            4. <span style="color: #10b981; font-weight: bold;">确保【作为网页App打开】已开启</span> <svg viewBox="0 0 40 24" width="26" height="16" style="vertical-align: text-bottom; margin-left: 2px;"><rect width="40" height="24" rx="12" fill="#34c759"/><circle cx="28" cy="12" r="10" fill="#fff" filter="drop-shadow(0 1px 2px rgba(0,0,0,0.2))"/></svg><br>
+            5. 点击右上角 <b>添加</b><br>
+            6. 自动回到桌面，即可看到独立的原生 App 图标！
+          </div>
+          <button class="about-primary start-ios-guide-btn" style="width: 100%; margin-top: 15px;" onclick="window.startIosGuide(event)">开启安装引导</button>
         </div>
 
-      </div>
+        <div id="ios-mode-profile" class="ios-install-pane">
+          <p style="font-size: 13px; font-weight: bold; margin-bottom: 4px; color: var(--text-main);">✨ 优点：</p>
+          <p style="font-size: 13px; color: var(--text-sub); margin-bottom: 10px; padding-left: 6px;">无地址栏，100% 沉浸感，媲美原生UI体验。</p>
+          <p style="font-size: 13px; font-weight: bold; margin-bottom: 4px; color: var(--text-main);">💡 不足：</p>
+          <p style="font-size: 13px; color: var(--text-sub); margin-bottom: 12px; padding-left: 6px;">受 iOS 限制，锁屏暂停后系统会强制终止进程，无法恢复播放</p>
 
-      <div class="about-footer">
-        <button class="about-secondary" id="ios-desktop-cancel">取消</button>
-        <button class="about-primary" id="ios-desktop-confirm" style="border: 1px solid transparent;">生成并下载</button>
-        <button class="about-primary" id="ios-desktop-done" style="display: none; border: 1px solid transparent;">我知道了</button>
+          <div style="font-size: 13px; font-weight: bold; margin-bottom: 8px; color: var(--text-main);">🛠️ 操作步骤：</div>
+          <div style="font-size: 13px; color: var(--text-main); background: var(--bg-color); padding: 12px; border-radius: 10px; line-height: 1.8; margin-bottom: 15px;">
+            1. 完成下方图标名称，绑定服务地址修改<br>
+            2. 点击<b>生成并下载配置</b>后，在弹窗中允许下载<br>
+            3. 打开手机自带的 <b>设置</b> 应用<br>
+            4. 前往 <b>通用</b> -> <b>VPN与设备管理</b><br>
+            5. 找到 <b>iWebPlayer Config</b> 点击进行安装，根据iPhone提示直到完成<br>
+            6. 回到桌面，即可看到独立的原生 App 图标！
+          </div>
+
+          <div style="margin-bottom: 12px;">
+              <div style="font-size: 13px; font-weight: bold; margin-bottom: 6px; color: var(--text-main);">图标名称</div>
+              <div style="display: flex; align-items: center; background: var(--bg-color); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; height: 36px;">
+                  <div style="padding: 0 10px; font-size: 14px; color: var(--text-sub); background: var(--border); height: 100%; display: flex; align-items: center; border-right: 1px solid var(--border); font-weight: bold; flex-shrink: 0; user-select: none;">iWebPlayer</div>
+                  <input type="text" id="ios-desktop-name" placeholder="后缀(可选)，如: (家)" maxlength="10" autocomplete="off" style="flex: 1; border: none; background: transparent; padding: 0 10px; font-size: 14px; color: var(--text-main); outline: none; height: 100%;">
+              </div>
+          </div>
+          <div style="margin-bottom: 12px;">
+              <div style="font-size: 13px; font-weight: bold; margin-bottom: 6px; color: var(--text-main);">绑定服务地址</div>
+              <div class="modal-input-group" style="margin-top: 0; height: 36px; border-radius: 8px;">
+                  <input type="text" id="ios-desktop-url" autocomplete="off" style="padding: 0 10px; font-size: 14px; height: 100%;">
+              </div>
+          </div>
+
+          <button class="about-primary" id="btn-download-profile" style="width: 100%; margin-top: 15px; font-weight: bold;">生成并下载配置</button>
+        </div>
       </div>
+    </div>
+  </div>
+
+  <div class="ios-guide-bubble" id="ios-guide-bubble">
+    <div style="font-size: 14px; font-weight: bold; display: flex; align-items: center; justify-content: flex-end; width: 100%;">
+      点击底部的 <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" style="margin: 0 4px;"><circle cx="5" cy="12" r="2.5"></circle><circle cx="12" cy="12" r="2.5"></circle><circle cx="19" cy="12" r="2.5"></circle></svg> 菜单
+    </div>
+    <div style="font-size: 13px; margin-top: 6px; opacity: 0.8;">
+      选择 <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: text-bottom; margin: 0 2px;"><path d="M8 9H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2h-2"></path><polyline points="15 5 12 1 9 5"></polyline><line x1="12" y1="1" x2="12" y2="14"></line></svg><b>共享</b> -> <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: text-bottom; margin: 0 2px;"><rect x="4" y="4" width="16" height="16" rx="3" ry="3"></rect><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg><b>添加到主屏幕</b>
+    </div>
+    <div class="ios-guide-arrow">
+      <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="4" x2="12" y2="18"></line><polyline points="19 11 12 18 5 11"></polyline></svg>
     </div>
   </div>
 
@@ -1989,7 +2056,7 @@
     /* ==========================================
      * 1. 核心配置与全局状态
      * ========================================== */
-    const APP_VERSION = 'v1.7.0';
+    const APP_VERSION = 'v1.7.1';
     const APP_LOGO = document.getElementById('app-logo')?.content || '';
     const LX_PLATFORMS_MAP = { 'tx': 'QQ', 'wy': '网易云', 'kg': '酷狗', 'kw': '酷我', 'mg': '咪咕' };
     const LX_BACKEND_NAMES = { 'tx': '小秋音乐', 'wy': '小芸音乐', 'kg': '小枸音乐', 'kw': '小蜗音乐', 'mg': '小蜜音乐' };
@@ -6847,16 +6914,32 @@
     // 统一引擎状态控制中心（负责 UI、缓存、关键字的恢复）
     // ==========================================
 
-    // 控制右侧按钮：是在搜歌还是在详情(显示返回)
+    // 控制右侧按钮：是在搜歌还是在详情(显示返回)，并同步控制插件下拉框状态
     window.toggleSearchBackBtn = function(showBack) {
         const mainBtns = document.getElementById('mf-search-main-btns');
         const backBtn = document.getElementById('mf-search-back-btn');
+        const mfPluginVal = document.getElementById('mf-plugin-val'); // 获取插件下拉框
+
         if (showBack) {
             if (mainBtns) mainBtns.style.display = 'none';
             if (backBtn) backBtn.style.display = 'block';
+
+            // 显示返回时，禁用插件下拉框
+            if (mfPluginVal) {
+                mfPluginVal.style.pointerEvents = 'none';
+                mfPluginVal.style.opacity = '0.5';
+                mfPluginVal.style.cursor = 'not-allowed';
+            }
         } else {
             if (mainBtns) mainBtns.style.display = 'flex';
             if (backBtn) backBtn.style.display = 'none';
+
+            // 隐藏返回时，恢复插件下拉框
+            if (mfPluginVal) {
+                mfPluginVal.style.pointerEvents = 'auto';
+                mfPluginVal.style.opacity = '1';
+                mfPluginVal.style.cursor = 'pointer';
+            }
         }
     };
 
@@ -7430,168 +7513,130 @@
     }
 
     // ==========================================
-    // iOS 桌面图标生成器
+    // iOS 桌面安装弹窗与 PWA 逻辑
     // ==========================================
     const settingIosBtn = document.getElementById('setting-ios-desktop');
     const iosModal = document.getElementById('ios-desktop-backdrop');
-    const iosStep1 = document.getElementById('ios-desktop-step1');
-    const iosStep2 = document.getElementById('ios-desktop-step2');
-    const iosBtnCancel = document.getElementById('ios-desktop-cancel');
-    const iosBtnConfirm = document.getElementById('ios-desktop-confirm');
-    const iosBtnDone = document.getElementById('ios-desktop-done');
-    const iosInputUrl = document.getElementById('ios-desktop-url');
-    const iosInputName = document.getElementById('ios-desktop-name');
+    const iosTabs = document.querySelectorAll('.ios-plugin-tab');
+    const guideBubble = document.getElementById('ios-guide-bubble');
     const iosCloseBtn = document.getElementById('ios-desktop-close');
 
-    const closeIosModal = () => {
-        if (iosModal) {
-            iosModal.classList.remove('show');
-            iosModal.setAttribute('aria-hidden', 'true');
-            document.body.style.overflow = '';
-        }
-    };
+    // 仅保留需要的输入框变量
+    const iosInputUrl = document.getElementById('ios-desktop-url');
+    const iosInputName = document.getElementById('ios-desktop-name');
 
     if (settingIosBtn && iosModal) {
-
+        // 打开弹窗
         settingIosBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             if (settingsOpts) settingsOpts.classList.remove('show');
 
-            iosStep1.style.display = 'block';
-            iosStep2.style.display = 'none';
-            iosBtnCancel.style.display = 'inline-block';
-            iosBtnConfirm.style.display = 'inline-block';
-            iosBtnDone.style.display = 'none';
+            const headerLogoImg = document.getElementById('ios-header-logo-img');
+            if (headerLogoImg) headerLogoImg.src = document.getElementById('app-logo')?.content || '';
 
-            const ua = navigator.userAgent;
-            const isIOS = /iPad|iPhone|iPod/.test(ua);
-            // 条件：是iOS + 包含WebKit + 绝对不包含Chrome/QQ/微信/钉钉/Edge等标志
-            const isSafari = isIOS && /WebKit/i.test(ua) && !/(CriOS|FxiOS|OPiOS|mercury|EdgiOS|QQ|MicroMessenger|Weibo|Alipay|DingTalk)/i.test(ua);
-
-            const warningEl = document.getElementById('ios-safari-warning');
-            if (warningEl) {
-                // 如果是在原生 Safari 里，隐藏警告；否则显示刺眼的红底警告
-                warningEl.style.display = isSafari ? 'none' : 'block';
-            }
-
-            // 核心：动态截取并净化 URL (丢弃所有参数)
-            iosInputUrl.value = window.location.origin + window.location.pathname;
-            iosInputName.value = '';
+            // 仅重置 URL 和名称，删除了所有关于 Step 的调整代码
+            if (iosInputUrl) iosInputUrl.value = window.location.origin + window.location.pathname;
+            if (iosInputName) iosInputName.value = '';
 
             iosModal.classList.add('show');
             iosModal.setAttribute('aria-hidden', 'false');
             document.body.style.overflow = 'hidden';
         });
 
-        // 绑定关闭事件
+        // 关闭弹窗
+        const closeIosModal = () => {
+            iosModal.classList.remove('show');
+            iosModal.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = '';
+        };
         iosCloseBtn?.addEventListener('click', closeIosModal);
-        iosBtnCancel?.addEventListener('click', closeIosModal);
-        iosBtnDone?.addEventListener('click', closeIosModal);
         iosModal.addEventListener('click', (e) => { if (e.target === iosModal) closeIosModal(); });
 
-        // 辅助函数：生成标准的随机 UUID
-        const generateUUID = () => {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-                const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
-                return v.toString(16);
+        // 标签切换
+        iosTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const targetId = tab.dataset.target;
+                iosTabs.forEach(t => {
+                    t.classList.remove('active');
+                    t.style.fontWeight = '500';
+                    t.style.color = 'var(--text-sub)';
+                    t.style.borderBottomColor = 'transparent';
+                });
+                tab.classList.add('active');
+                tab.style.fontWeight = 'bold';
+                tab.style.color = 'var(--primary)';
+                tab.style.borderBottomColor = 'var(--primary)';
+
+                document.querySelectorAll('.ios-install-pane').forEach(p => p.classList.remove('active'));
+                document.getElementById(targetId).classList.add('active');
             });
+        });
+
+        window.startIosGuide = (e) => {
+            if (e) e.stopPropagation();
+            guideBubble.classList.add('show');
         };
 
-        // 点击生成并下载
-        iosBtnConfirm.addEventListener('click', () => {
+        document.addEventListener('click', (e) => {
+            if (guideBubble && guideBubble.classList.contains('show')) {
+                if (!e.target.closest('.start-ios-guide-btn')) {
+                    guideBubble.classList.remove('show');
+                }
+            }
+        });
+
+        // 一键下载描述文件 - 删除了最后的跳转代码
+        document.getElementById('btn-download-profile')?.addEventListener('click', () => {
             const targetUrl = iosInputUrl.value.trim();
-            if (!targetUrl) {
-                showToast("请输入绑定的服务地址");
-                return;
-            }
+            if (!targetUrl) { showToast("请输入绑定的服务地址"); return; }
 
-            // 提取 URL 中的域名或 IP (例如: 192.168.1.100 或 music.xxx.com)
             let hostIdentifier = "";
-            try {
-                const urlObj = new URL(targetUrl);
-                hostIdentifier = urlObj.hostname;
-            } catch (e) {
-                // 如果 URL 不规范，尝试简单截取
-                hostIdentifier = targetUrl.replace(/^https?:\/\//, '').split(/[:\/]/)[0];
-            }
+            try { hostIdentifier = new URL(targetUrl).hostname; }
+            catch (e) { hostIdentifier = targetUrl.replace(/^https?:\/\//, '').split(/[:\/]/)[0]; }
 
-            // 组装 App 名字：前缀固定 + 用户自定义后缀
             const suffix = iosInputName.value.trim();
             const finalLabel = suffix ? `iWebPlayer${suffix}` : 'iWebPlayer';
-
-            // 构造最终显示的描述文件标题
             const configDisplayName = `${finalLabel} Config [${hostIdentifier}]`;
 
-            // 抽取 Base64 纯净图片代码
             const logoMeta = document.getElementById('app-logo')?.content || '';
             let base64Icon = '';
-            if (logoMeta.includes('base64,')) {
-                base64Icon = logoMeta.split('base64,')[1];
-            }
+            if (logoMeta.includes('base64,')) base64Icon = logoMeta.split('base64,')[1];
 
-            const uuid1 = generateUUID();
-            const uuid2 = generateUUID();
+            const uuid1 = crypto.randomUUID ? crypto.randomUUID() : '12345678-1234-1234-1234-123456789012';
+            const uuid2 = crypto.randomUUID ? crypto.randomUUID() : '87654321-4321-4321-4321-210987654321';
 
-            // 拼装苹果描述文件 XML
-            const mobileConfigTemplate = `<?xml version="1.0" encoding="UTF-8"?>
+            const mobileConfig = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-<key>PayloadContent</key>
-<array>
-<dict>
-<key>FullScreen</key>
-<true/>
-<key>IsRemovable</key>
-<true/>
-<key>Label</key>
-<string>${finalLabel}</string>
-<key>PayloadIdentifier</key>
-<string>com.iwebplayer.webclip.${uuid1}</string>
-<key>PayloadType</key>
-<string>com.apple.webClip.managed</string>
-<key>PayloadUUID</key>
-<string>${uuid1}</string>
-<key>PayloadVersion</key>
-<integer>1</integer>
-<key>Precomposed</key>
-<true/>
-<key>URL</key>
-<string>${targetUrl}</string>
-${base64Icon ? `<key>Icon</key><data>${base64Icon}</data>` : ''}
-</dict>
-</array>
-<key>PayloadDisplayName</key>
-<string>${configDisplayName}</string>
-<key>PayloadDescription</key>
-<string>添加 iWebPlayer 沉浸式桌面图标</string>
-<key>PayloadIdentifier</key>
-<string>com.iwebplayer.profile.${uuid2}</string>
-<key>PayloadType</key>
-<string>Configuration</string>
-<key>PayloadUUID</key>
-<string>${uuid2}</string>
-<key>PayloadVersion</key>
-<integer>1</integer>
-</dict>
-</plist>`;
+<plist version="1.0"><dict><key>PayloadContent</key><array><dict><key>FullScreen</key><true/><key>IsRemovable</key><true/><key>Label</key><string>${finalLabel}</string><key>PayloadIdentifier</key><string>com.iwp.webclip.${uuid1}</string><key>PayloadType</key><string>com.apple.webClip.managed</string><key>PayloadUUID</key><string>${uuid1}</string><key>PayloadVersion</key><integer>1</integer><key>Precomposed</key><true/><key>URL</key><string>${targetUrl}</string>${base64Icon ? `<key>Icon</key><data>${base64Icon}</data>` : ''}</dict></array><key>PayloadDisplayName</key><string>${configDisplayName}</string><key>PayloadDescription</key><string>添加全屏播放器</string><key>PayloadIdentifier</key><string>com.iwp.profile.${uuid2}</string><key>PayloadType</key><string>Configuration</string><key>PayloadUUID</key><string>${uuid2}</string><key>PayloadVersion</key><integer>1</integer></dict></plist>`;
 
-            const blob = new Blob([mobileConfigTemplate], { type: 'application/x-apple-aspen-config' });
-            const blobUrl = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = blobUrl;
-            // 文件名也改为带 Host 的形式，更加一目了然
-            a.download = `${finalLabel}_${hostIdentifier}.mobileconfig`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(blobUrl);
+            const blob = new Blob([mobileConfig], { type: 'application/x-apple-aspen-config' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `${finalLabel}_${hostIdentifier}.mobileconfig`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
 
-            iosStep1.style.display = 'none';
-            iosStep2.style.display = 'block';
-            iosBtnCancel.style.display = 'none';
-            iosBtnConfirm.style.display = 'none';
-            iosBtnDone.style.display = 'block';
+            // 此处原本的 iosStep1/Step2 切换代码已删除
+            showToast("✅ 配置文件已生成并开始下载");
+        });
+    }
+
+    // ==========================================
+    // 核心容错：Standalone 模式下，锁屏暂停即“清空”
+    // ==========================================
+    const isStandaloneMode = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+    if (isStandaloneMode && audioEl) {
+        audioEl.addEventListener('pause', () => {
+            if (audioEl.src && !audioEl.ended && currentDid === "") {
+                console.log('检测到 PWA 模式暂停，为防止死锁已清空音频源');
+                const currentTime = audioEl.currentTime;
+                audioEl.src = "";
+                audioEl.load();
+                if (typeof updatePlayButtonUI === 'function') updatePlayButtonUI(false);
+                localStorage.setItem('standalone_resume_time', currentTime);
+            }
         });
     }
 
@@ -7600,3 +7645,4 @@ ${base64Icon ? `<key>Icon</key><data>${base64Icon}</data>` : ''}
   </script>
 </body>
 </html>
+
